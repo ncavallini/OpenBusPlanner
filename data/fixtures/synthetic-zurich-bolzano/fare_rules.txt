@@ -1,0 +1,5 @@
+fare_id,route_id,origin_id,destination_id
+F_B_ZRH_MIL,R_B,Z-ZRH,Z-MIL
+F_C_MIL_BZO,R_C,Z-MIL,Z-BZO
+F_C_VRN_BZO,R_C,Z-VRN,Z-BZO
+F_C_MIL_VRN,R_C,Z-MIL,Z-VRN

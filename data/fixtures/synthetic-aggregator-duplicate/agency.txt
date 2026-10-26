@@ -1,0 +1,2 @@
+agency_id,agency_name,agency_url,agency_timezone
+AGG-ALPHA,Fixture Coach Alpha (synthetic),https://alpha.fixture.invalid/,Europe/Zurich

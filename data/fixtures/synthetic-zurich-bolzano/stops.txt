@@ -1,0 +1,11 @@
+stop_id,stop_name,stop_lat,stop_lon,location_type,parent_station,zone_id,stop_timezone
+ZRH-SQ,Zürich Sihlquai Bus Terminal,47.3784,8.5328,0,,Z-ZRH,Europe/Zurich
+CHUR,Chur Postautostation,46.8531,9.5287,0,,,Europe/Zurich
+LUG,Lugano Autosilo Balestra,46.0050,8.9470,0,,,Europe/Zurich
+MIL-LAM,Milano Lampugnano,45.4893,9.1236,0,,Z-MIL,Europe/Rome
+MIL-SDO,Milano San Donato,45.4153,9.2633,0,,,Europe/Rome
+VRN,Verona Porta Nuova Bus,45.4290,10.9820,0,,Z-VRN,Europe/Rome
+MUC-ZOB,München ZOB,48.1425,11.5497,0,,,Europe/Berlin
+INN-HBF,Innsbruck Hauptbahnhof Bus,47.2633,11.4008,0,,,Europe/Vienna
+INN-SIL,Innsbruck Sillpark,47.2655,11.4045,0,,,Europe/Vienna
+BZO-BUS,Bolzano/Bozen Autostazione,46.4966,11.3577,0,,Z-BZO,Europe/Rome

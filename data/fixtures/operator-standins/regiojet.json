@@ -1,0 +1,20 @@
+{
+  "format": "openbus-manual-timetable/v1",
+  "synthetic": true,
+  "publisher": "OpenBus Planner SYNTHETIC STAND-IN for the RegioJet adapter - not real departures",
+  "version": "standin-1",
+  "operators": [{ "id": "regiojet", "name": "Fixture stand-in for RegioJet (synthetic)", "url": null, "timezone": "Europe/Prague" }],
+  "stops": [
+    { "id": "a", "name": "Praha Florenc (stand-in stop)", "lat": 50.0897, "lon": 14.4400 },
+    { "id": "b", "name": "Brno ÚAN Zvonařka (stand-in stop)", "lat": 49.1855, "lon": 16.6168 }
+  ],
+  "services": [
+    {
+      "id": "S1",
+      "operator": "regiojet",
+      "name": "Praha Florenc – Brno ÚAN Zvonařka (synthetic)",
+      "calendar": { "days": "1111111", "from": "2026-01-01", "to": "2027-12-31" },
+      "trips": [{ "id": "1", "calls": [["a", "08:00"], ["b", "10:30"]] }]
+    }
+  ]
+}

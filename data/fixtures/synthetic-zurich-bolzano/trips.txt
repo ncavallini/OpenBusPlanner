@@ -1,0 +1,13 @@
+route_id,service_id,trip_id,trip_headsign
+R_A_DIRECT,DAILY_A,A_DIRECT_N,Bolzano
+R_A_EARLY,MON_SAT,A_EARLY_NOTSUN,Bolzano
+R_B,DAILY,B_ZRH_MIL_1900,Milano Lampugnano
+R_B,DAILY,B_ZRH_MIL_2055,Milano Lampugnano
+R_C,DAILY,C_MIL_BZO_0030,Bolzano
+R_C,NYE,X_NYE_SPECIAL,Bolzano
+R_D,DAILY,D_ZRH_MUC_1500,München
+R_D2,DAILY,D_ZRH_SDO_1800,Milano San Donato
+R_E,DAILY,E_MUC_INN_2030,Innsbruck
+R_F,DAILY,F_INN_BZO_0130,Bolzano
+R_G,DAILY,G_MIL_BZO_0045,Bolzano
+R_H,DAILY,H_ZRH_VRN_1700,Verona

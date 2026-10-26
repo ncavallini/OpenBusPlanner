@@ -1,0 +1,2 @@
+feed_publisher_name,feed_publisher_url,feed_lang,feed_start_date,feed_end_date,feed_version,feed_contact_email
+OpenBus Planner SYNTHETIC TEST FIXTURE - not real departures,https://fixture.invalid/,en,20260101,20271231,fixture-zrh-bzo-1,fixtures@fixture.invalid

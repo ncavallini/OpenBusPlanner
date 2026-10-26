@@ -1,0 +1,16 @@
+{
+  "name": "@openbus/worker",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "dev": "tsx watch src/index.ts",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@openbus/db": "workspace:*",
+    "@openbus/ingest": "workspace:*",
+    "bullmq": "^5.61.0"
+  }
+}

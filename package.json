@@ -1,0 +1,38 @@
+{
+  "name": "openbus-planner",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Operator-independent, schedule-aware long-distance bus journey planner for Europe",
+  "packageManager": "pnpm@9.15.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "pnpm --parallel --filter @openbus/api --filter @openbus/web dev",
+    "build": "pnpm -r build",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "test": "vitest run --project unit",
+    "test:integration": "vitest run --project integration",
+    "test:all": "vitest run",
+    "test:e2e": "pnpm --filter @openbus/web test:e2e",
+    "db:migrate": "pnpm --filter @openbus/db migrate",
+    "db:seed": "pnpm --filter @openbus/ingest cli seed",
+    "ingest": "pnpm --filter @openbus/ingest cli",
+    "bench": "pnpm --filter @openbus/bench bench --",
+    "services:up": "docker compose up -d postgres redis",
+    "services:down": "docker compose down"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "@types/node": "^22.19.0",
+    "eslint": "^9.39.5",
+    "globals": "^16.5.0",
+    "prettier": "^3.6.2",
+    "tsx": "^4.20.6",
+    "typescript": "5.9.3",
+    "typescript-eslint": "^8.72.0",
+    "vitest": "^3.2.7"
+  }
+}

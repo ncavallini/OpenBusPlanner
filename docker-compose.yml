@@ -1,0 +1,90 @@
+name: openbus
+
+# `docker compose up -d postgres redis` — infrastructure only (local development)
+# `docker compose --profile app up --build` — full stack: web on http://localhost:3000
+
+x-app-env: &app-env
+  DATABASE_URL: postgres://openbus:openbus@postgres:5432/openbus
+  REDIS_URL: redis://redis:6379
+  ENABLED_SOURCES: ${ENABLED_SOURCES:-default}
+  DEFAULT_DATA_SCOPE: ${DEFAULT_DATA_SCOPE:-all}
+  FX_RATES_TO_EUR: ${FX_RATES_TO_EUR:-}
+  PEDESTRIAN_ROUTER_URL: ${PEDESTRIAN_ROUTER_URL:-}
+
+services:
+  postgres:
+    image: postgis/postgis:16-3.4
+    environment:
+      POSTGRES_USER: openbus
+      POSTGRES_PASSWORD: openbus
+      POSTGRES_DB: openbus
+    ports:
+      - "${POSTGRES_PORT:-55432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U openbus -d openbus"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  redis:
+    image: redis:7.4-alpine
+    ports:
+      - "${REDIS_PORT:-56379}:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  worker:
+    profiles: [app]
+    build: { context: ., target: worker }
+    environment:
+      <<: *app-env
+      SEED_ON_START: "1"
+    volumes:
+      - downloads:/app/data/downloads
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+    restart: unless-stopped
+
+  api:
+    profiles: [app]
+    build: { context: ., target: api }
+    environment:
+      <<: *app-env
+      INTERNAL_API_TOKEN: ${INTERNAL_API_TOKEN:-}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
+    ports:
+      - "${API_PORT:-4080}:4080"
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:4080/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    restart: unless-stopped
+
+  web:
+    profiles: [app]
+    build:
+      context: .
+      target: web
+      args:
+        API_URL: http://api:4080
+    environment:
+      API_URL: http://api:4080
+    ports:
+      - "${WEB_PORT:-3000}:3000"
+    depends_on:
+      api: { condition: service_healthy }
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  downloads:

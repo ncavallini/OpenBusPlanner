@@ -1,0 +1,20 @@
+{
+  "format": "openbus-manual-timetable/v1",
+  "synthetic": true,
+  "publisher": "OpenBus Planner SYNTHETIC STAND-IN for the Itabus adapter - not real departures",
+  "version": "standin-1",
+  "operators": [{ "id": "itabus", "name": "Fixture stand-in for Itabus (synthetic)", "url": null, "timezone": "Europe/Rome" }],
+  "stops": [
+    { "id": "a", "name": "Milano Lampugnano (stand-in stop)", "lat": 45.4893, "lon": 9.1236 },
+    { "id": "b", "name": "Roma Tiburtina (stand-in stop)", "lat": 41.9105, "lon": 12.5310 }
+  ],
+  "services": [
+    {
+      "id": "S1",
+      "operator": "itabus",
+      "name": "Milano Lampugnano – Roma Tiburtina (synthetic)",
+      "calendar": { "days": "1111111", "from": "2026-01-01", "to": "2027-12-31" },
+      "trips": [{ "id": "1", "calls": [["a", "08:00"], ["b", "15:40"]] }]
+    }
+  ]
+}

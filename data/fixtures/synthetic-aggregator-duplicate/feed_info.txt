@@ -1,0 +1,2 @@
+feed_publisher_name,feed_publisher_url,feed_lang,feed_version
+OpenBus Planner SYNTHETIC TEST FIXTURE (aggregator copy) - not real departures,https://fixture.invalid/,en,fixture-aggregator-1

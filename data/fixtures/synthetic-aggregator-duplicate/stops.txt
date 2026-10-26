@@ -1,0 +1,4 @@
+stop_id,stop_name,stop_lat,stop_lon
+agg:zurich,Zurich Sihlquai,47.37851,8.53295
+agg:chur,Chur Post,46.85318,9.52884
+agg:bozen,Bozen Busbahnhof,46.49668,11.35762

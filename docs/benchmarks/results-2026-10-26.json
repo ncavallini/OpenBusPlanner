@@ -1,0 +1,116 @@
+{
+  "date": "2026-10-26T18:17:25.090Z",
+  "hardware": {
+    "cpu": "Intel(R) Core(TM) i9-10900 CPU @ 2.80GHz",
+    "logicalCores": 20,
+    "memoryGb": 34,
+    "os": "win32 10.0.26300",
+    "node": "v24.11.0",
+    "singleThreaded": true
+  },
+  "queriesPerScenario": 200,
+  "queryMix": "random city pairs 150–1600 km apart; 50% departure search (8 h window), 50% arrival search (4 h window); max 3 transfers; 10 min minimum transfer; 8 h max wait",
+  "results": [
+    {
+      "name": "generated-medium (FlixBus-EU-like size)",
+      "dataset": {
+        "stations": 1828,
+        "cities": 900,
+        "lines": 1200,
+        "datedTrips": 24072,
+        "raptorRoutes": 1200,
+        "days": 4
+      },
+      "buildMs": 169,
+      "queries": {
+        "pareto (no alternatives)": {
+          "n": 200,
+          "p50": 1,
+          "p90": 2.9,
+          "p99": 10.2,
+          "max": 11.4,
+          "meanResults": 0.6,
+          "meanLabels": 952,
+          "truncated": 0
+        },
+        "with corridor alternatives": {
+          "n": 200,
+          "p50": 1,
+          "p90": 2.8,
+          "p99": 7.6,
+          "max": 8,
+          "meanResults": 0.7,
+          "meanLabels": 1544,
+          "truncated": 0
+        }
+      }
+    },
+    {
+      "name": "generated-large (≈5× medium)",
+      "dataset": {
+        "stations": 7506,
+        "cities": 3000,
+        "lines": 6000,
+        "datedTrips": 119861,
+        "raptorRoutes": 6000,
+        "days": 4
+      },
+      "buildMs": 773,
+      "queries": {
+        "pareto (no alternatives)": {
+          "n": 200,
+          "p50": 11,
+          "p90": 15.5,
+          "p99": 23.6,
+          "max": 27.1,
+          "meanResults": 0.6,
+          "meanLabels": 2990,
+          "truncated": 0
+        },
+        "with corridor alternatives": {
+          "n": 200,
+          "p50": 8.3,
+          "p90": 18.2,
+          "p99": 39.3,
+          "max": 43.5,
+          "meanResults": 0.7,
+          "meanLabels": 5447,
+          "truncated": 0
+        }
+      }
+    },
+    {
+      "name": "real FlixBus EU GTFS (3 service days + 2 days of overnight lead-in)",
+      "dataset": {
+        "stations": 2116,
+        "cities": 121,
+        "datedTrips": 17544,
+        "raptorRoutes": 2956,
+        "footpaths": 306
+      },
+      "buildMs": 125,
+      "queries": {
+        "pareto (no alternatives)": {
+          "n": 200,
+          "p50": 10.2,
+          "p90": 18.4,
+          "p99": 28.5,
+          "max": 30.4,
+          "meanResults": 3.5,
+          "meanLabels": 11902,
+          "truncated": 0
+        },
+        "with corridor alternatives": {
+          "n": 200,
+          "p50": 23.9,
+          "p90": 48.9,
+          "p99": 73.9,
+          "max": 76.5,
+          "meanResults": 8,
+          "meanLabels": 34140,
+          "truncated": 0
+        }
+      }
+    }
+  ]
+}

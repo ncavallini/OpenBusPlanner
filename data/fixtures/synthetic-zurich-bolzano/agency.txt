@@ -1,0 +1,9 @@
+agency_id,agency_name,agency_url,agency_timezone,agency_lang
+opA,Fixture Coach Alpha (synthetic),https://alpha.fixture.invalid/,Europe/Zurich,en
+opB,Fixture Bus Bravo (synthetic),https://bravo.fixture.invalid/,Europe/Zurich,en
+opC,Fixture Lines Charlie (synthetic),https://charlie.fixture.invalid/,Europe/Rome,en
+opD,Fixture Express Delta (synthetic),https://delta.fixture.invalid/,Europe/Zurich,en
+opE,Fixture Regional Echo (synthetic),https://echo.fixture.invalid/,Europe/Berlin,en
+opF,Fixture Alpine Foxtrot (synthetic),https://foxtrot.fixture.invalid/,Europe/Vienna,en
+opG,Fixture Golf Coaches (synthetic),https://golf.fixture.invalid/,Europe/Rome,en
+opH,Fixture Hotel Bus (synthetic),https://hotel.fixture.invalid/,Europe/Zurich,en

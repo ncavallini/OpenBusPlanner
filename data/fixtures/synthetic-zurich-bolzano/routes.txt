@@ -1,0 +1,11 @@
+route_id,agency_id,route_short_name,route_long_name,route_type
+R_A_DIRECT,opA,A1,Zürich – Bolzano Night,200
+R_A_EARLY,opA,A2,Zürich – Bolzano Early,200
+R_B,opB,B10,Zürich – Lugano – Milano,200
+R_C,opC,C20,Milano – Verona – Bolzano,200
+R_D,opD,D30,Zürich – München,200
+R_D2,opD,D31,Zürich – Milano San Donato,200
+R_E,opE,E40,München – Innsbruck,200
+R_F,opF,F50,Innsbruck – Bolzano,200
+R_G,opG,G60,Milano – Bolzano Late,200
+R_H,opH,H70,Zürich – Verona,200

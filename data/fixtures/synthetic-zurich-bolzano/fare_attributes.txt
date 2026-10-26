@@ -1,0 +1,5 @@
+fare_id,price,currency_type,payment_method,transfers,agency_id
+F_B_ZRH_MIL,35.00,CHF,1,0,opB
+F_C_MIL_BZO,24.90,EUR,1,0,opC
+F_C_VRN_BZO,12.50,EUR,1,0,opC
+F_C_MIL_VRN,14.00,EUR,1,0,opC

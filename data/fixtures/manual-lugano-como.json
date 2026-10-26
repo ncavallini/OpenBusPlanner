@@ -1,0 +1,27 @@
+{
+  "format": "openbus-manual-timetable/v1",
+  "synthetic": true,
+  "publisher": "OpenBus Planner SYNTHETIC TEST FIXTURE - manual timetable format example",
+  "version": "fixture-manual-1",
+  "operators": [
+    { "id": "lakes", "name": "Fixture Lakes Shuttle (synthetic)", "url": "https://lakes.fixture.invalid/", "timezone": "Europe/Zurich" }
+  ],
+  "stops": [
+    { "id": "lugano-centro", "name": "Lugano Centro (fixture stop)", "lat": 46.0047, "lon": 8.9515, "timezone": "Europe/Zurich" },
+    { "id": "chiasso", "name": "Chiasso Stazione (fixture stop)", "lat": 45.8325, "lon": 9.0310, "timezone": "Europe/Zurich" },
+    { "id": "como", "name": "Como San Giovanni (fixture stop)", "lat": 45.8090, "lon": 9.0727, "timezone": "Europe/Rome" }
+  ],
+  "services": [
+    {
+      "id": "LC1",
+      "operator": "lakes",
+      "name": "Lugano – Chiasso – Como",
+      "calendar": { "days": "1111100", "from": "2026-01-01", "to": "2027-12-31", "except": ["2026-12-25"], "extra": ["2026-12-27"] },
+      "trips": [
+        { "id": "0705", "headsign": "Como", "calls": [["lugano-centro", "07:05"], ["chiasso", "07:35", "07:37"], ["como", "07:55"]] },
+        { "id": "1805", "headsign": "Como", "calls": [["lugano-centro", "18:05"], ["chiasso", "18:35", "18:37"], ["como", "18:55"]] }
+      ]
+    }
+  ],
+  "fares": [{ "service": "LC1", "from": "lugano-centro", "to": "como", "amount": 9.8, "currency": "CHF" }]
+}

@@ -1,0 +1,5 @@
+trip_id,arrival_time,departure_time,stop_id,stop_sequence,pickup_type,drop_off_type
+agg-trip-1,23:30:00,23:30:00,agg:zurich,1,0,1
+agg-trip-1,24:50:00,25:00:00,agg:chur,2,0,0
+agg-trip-1,24:50:00,25:00:00,agg:chur,2,0,0
+agg-trip-1,29:30:00,29:30:00,agg:bozen,3,1,0

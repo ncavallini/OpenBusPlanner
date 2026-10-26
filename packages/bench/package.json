@@ -1,0 +1,15 @@
+{
+  "name": "@openbus/bench",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "bench": "tsx src/run-benchmark.ts",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@openbus/core": "workspace:*",
+    "@openbus/gtfs": "workspace:*",
+    "@openbus/router": "workspace:*"
+  }
+}

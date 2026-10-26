@@ -1,0 +1,2 @@
+route_id,agency_id,route_short_name,route_long_name,route_type
+AGG-1,AGG-ALPHA,A1,Zurich - Bozen,3

@@ -1,0 +1,3206 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "OpenBus Planner API",
+    "version": "v1",
+    "description": "Operator-independent long-distance bus journey planner. Journeys are computed from dated timetable data; prices are indicative and seat availability is never verified."
+  },
+  "components": {
+    "schemas": {}
+  },
+  "paths": {
+    "/api/v1/places/search": {
+      "get": {
+        "summary": "Autocomplete cities and stations (multilingual aliases)",
+        "tags": [
+          "places"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            },
+            "in": "query",
+            "name": "q",
+            "required": true
+          },
+          {
+            "schema": {
+              "default": 10,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 25
+            },
+            "in": "query",
+            "name": "limit",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "apiVersion": {
+                      "type": "string",
+                      "enum": [
+                        "v1"
+                      ]
+                    },
+                    "places": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "description": "Place id: \"city:<id>\" or \"station:<id>\""
+                          },
+                          "kind": {
+                            "type": "string",
+                            "enum": [
+                              "city",
+                              "station"
+                            ]
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "cityName": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "countryCode": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "lat": {
+                            "type": "number"
+                          },
+                          "lon": {
+                            "type": "number"
+                          },
+                          "timezone": {
+                            "type": "string"
+                          },
+                          "stationCount": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991,
+                            "description": "Stations with timetable data grouped under this place"
+                          },
+                          "matchedAlias": {
+                            "nullable": true,
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "kind",
+                          "name",
+                          "cityName",
+                          "countryCode",
+                          "lat",
+                          "lon",
+                          "timezone",
+                          "stationCount",
+                          "matchedAlias"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "apiVersion",
+                    "places"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {}
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/journeys/search": {
+      "post": {
+        "summary": "Search multi-operator journeys (departure or arrival based)",
+        "tags": [
+          "journeys"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "origin": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "Place id from /places/search"
+                  },
+                  "destination": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "mode": {
+                    "default": "depart",
+                    "type": "string",
+                    "enum": [
+                      "depart",
+                      "arrive"
+                    ]
+                  },
+                  "date": {
+                    "type": "string",
+                    "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+                    "description": "Local date at the origin (depart) or destination (arrive)"
+                  },
+                  "timeWindow": {
+                    "default": {
+                      "from": "00:00",
+                      "to": "23:59"
+                    },
+                    "description": "Window for departure (depart mode) or arrival (arrive mode). \"to\" earlier than \"from\" wraps past midnight.",
+                    "type": "object",
+                    "properties": {
+                      "from": {
+                        "type": "string",
+                        "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$"
+                      },
+                      "to": {
+                        "type": "string",
+                        "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$"
+                      }
+                    },
+                    "required": [
+                      "from",
+                      "to"
+                    ]
+                  },
+                  "departureNotBefore": {
+                    "description": "Arrive mode: earliest acceptable departure, local time at origin",
+                    "type": "object",
+                    "properties": {
+                      "date": {
+                        "type": "string",
+                        "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                      },
+                      "time": {
+                        "type": "string",
+                        "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$"
+                      }
+                    },
+                    "required": [
+                      "date",
+                      "time"
+                    ]
+                  },
+                  "arrivalNotAfter": {
+                    "description": "Depart mode: latest acceptable arrival, local time at destination",
+                    "type": "object",
+                    "properties": {
+                      "date": {
+                        "type": "string",
+                        "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                      },
+                      "time": {
+                        "type": "string",
+                        "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$"
+                      }
+                    },
+                    "required": [
+                      "date",
+                      "time"
+                    ]
+                  },
+                  "maxTransfers": {
+                    "default": 3,
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 6
+                  },
+                  "minTransferMinutes": {
+                    "default": 10,
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 240
+                  },
+                  "maxTransferWaitMinutes": {
+                    "default": 480,
+                    "type": "integer",
+                    "minimum": 5,
+                    "maximum": 1440
+                  },
+                  "maxDurationHours": {
+                    "default": 30,
+                    "type": "number",
+                    "minimum": 1,
+                    "maximum": 72
+                  },
+                  "maxWalkMeters": {
+                    "default": 1500,
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 5000
+                  },
+                  "transportModes": {
+                    "default": [
+                      "bus"
+                    ],
+                    "minItems": 1,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "bus",
+                        "rail"
+                      ]
+                    }
+                  },
+                  "includeOperators": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "excludeOperators": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "riskPreference": {
+                    "default": "balanced",
+                    "type": "string",
+                    "enum": [
+                      "cautious",
+                      "balanced",
+                      "adventurous"
+                    ]
+                  },
+                  "excludeRiskyTransfers": {
+                    "default": false,
+                    "type": "boolean"
+                  },
+                  "maxBudget": {
+                    "type": "object",
+                    "properties": {
+                      "amount": {
+                        "type": "number",
+                        "minimum": 0,
+                        "exclusiveMinimum": true
+                      },
+                      "currency": {
+                        "type": "string",
+                        "minLength": 3,
+                        "maxLength": 3
+                      }
+                    },
+                    "required": [
+                      "amount",
+                      "currency"
+                    ]
+                  },
+                  "sort": {
+                    "default": "recommended",
+                    "type": "string",
+                    "enum": [
+                      "recommended",
+                      "arrival",
+                      "departure",
+                      "duration",
+                      "transfers",
+                      "price",
+                      "reliability",
+                      "walking"
+                    ]
+                  },
+                  "alternatives": {
+                    "default": true,
+                    "description": "Also search corridors via other transfer cities",
+                    "type": "boolean"
+                  },
+                  "dataScope": {
+                    "description": "Defaults to the server configuration",
+                    "type": "string",
+                    "enum": [
+                      "all",
+                      "real",
+                      "synthetic"
+                    ]
+                  },
+                  "limit": {
+                    "default": 40,
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 100
+                  }
+                },
+                "required": [
+                  "origin",
+                  "destination",
+                  "date"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "apiVersion": {
+                      "type": "string",
+                      "enum": [
+                        "v1"
+                      ]
+                    },
+                    "searchId": {
+                      "type": "string"
+                    },
+                    "outcome": {
+                      "type": "string",
+                      "enum": [
+                        "results",
+                        "no_journey_in_available_data",
+                        "no_timetable_data_for_dates",
+                        "sources_unavailable",
+                        "place_not_served"
+                      ]
+                    },
+                    "outcomeMessage": {
+                      "type": "string"
+                    },
+                    "query": {
+                      "type": "object",
+                      "properties": {
+                        "origin": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "description": "Place id: \"city:<id>\" or \"station:<id>\""
+                            },
+                            "kind": {
+                              "type": "string",
+                              "enum": [
+                                "city",
+                                "station"
+                              ]
+                            },
+                            "name": {
+                              "type": "string"
+                            },
+                            "cityName": {
+                              "nullable": true,
+                              "type": "string"
+                            },
+                            "countryCode": {
+                              "nullable": true,
+                              "type": "string"
+                            },
+                            "lat": {
+                              "type": "number"
+                            },
+                            "lon": {
+                              "type": "number"
+                            },
+                            "timezone": {
+                              "type": "string"
+                            },
+                            "stationCount": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991,
+                              "description": "Stations with timetable data grouped under this place"
+                            },
+                            "matchedAlias": {
+                              "nullable": true,
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "kind",
+                            "name",
+                            "cityName",
+                            "countryCode",
+                            "lat",
+                            "lon",
+                            "timezone",
+                            "stationCount",
+                            "matchedAlias"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "destination": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "description": "Place id: \"city:<id>\" or \"station:<id>\""
+                            },
+                            "kind": {
+                              "type": "string",
+                              "enum": [
+                                "city",
+                                "station"
+                              ]
+                            },
+                            "name": {
+                              "type": "string"
+                            },
+                            "cityName": {
+                              "nullable": true,
+                              "type": "string"
+                            },
+                            "countryCode": {
+                              "nullable": true,
+                              "type": "string"
+                            },
+                            "lat": {
+                              "type": "number"
+                            },
+                            "lon": {
+                              "type": "number"
+                            },
+                            "timezone": {
+                              "type": "string"
+                            },
+                            "stationCount": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991,
+                              "description": "Stations with timetable data grouped under this place"
+                            },
+                            "matchedAlias": {
+                              "nullable": true,
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "kind",
+                            "name",
+                            "cityName",
+                            "countryCode",
+                            "lat",
+                            "lon",
+                            "timezone",
+                            "stationCount",
+                            "matchedAlias"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "mode": {
+                          "type": "string",
+                          "enum": [
+                            "depart",
+                            "arrive"
+                          ]
+                        },
+                        "windowStart": {
+                          "type": "object",
+                          "properties": {
+                            "epoch": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991,
+                              "description": "Unix seconds"
+                            },
+                            "local": {
+                              "type": "string",
+                              "description": "ISO-8601 local time with offset"
+                            },
+                            "timezone": {
+                              "type": "string",
+                              "description": "IANA time zone of the stop"
+                            }
+                          },
+                          "required": [
+                            "epoch",
+                            "local",
+                            "timezone"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "windowEnd": {
+                          "type": "object",
+                          "properties": {
+                            "epoch": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991,
+                              "description": "Unix seconds"
+                            },
+                            "local": {
+                              "type": "string",
+                              "description": "ISO-8601 local time with offset"
+                            },
+                            "timezone": {
+                              "type": "string",
+                              "description": "IANA time zone of the stop"
+                            }
+                          },
+                          "required": [
+                            "epoch",
+                            "local",
+                            "timezone"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "earliestDeparture": {
+                          "type": "object",
+                          "properties": {
+                            "epoch": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991,
+                              "description": "Unix seconds"
+                            },
+                            "local": {
+                              "type": "string",
+                              "description": "ISO-8601 local time with offset"
+                            },
+                            "timezone": {
+                              "type": "string",
+                              "description": "IANA time zone of the stop"
+                            }
+                          },
+                          "required": [
+                            "epoch",
+                            "local",
+                            "timezone"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "latestArrival": {
+                          "type": "object",
+                          "properties": {
+                            "epoch": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991,
+                              "description": "Unix seconds"
+                            },
+                            "local": {
+                              "type": "string",
+                              "description": "ISO-8601 local time with offset"
+                            },
+                            "timezone": {
+                              "type": "string",
+                              "description": "IANA time zone of the stop"
+                            }
+                          },
+                          "required": [
+                            "epoch",
+                            "local",
+                            "timezone"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      "required": [
+                        "origin",
+                        "destination",
+                        "mode",
+                        "windowStart",
+                        "windowEnd",
+                        "earliestDeparture",
+                        "latestArrival"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "itineraries": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "departure": {
+                            "type": "object",
+                            "properties": {
+                              "epoch": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991,
+                                "description": "Unix seconds"
+                              },
+                              "local": {
+                                "type": "string",
+                                "description": "ISO-8601 local time with offset"
+                              },
+                              "timezone": {
+                                "type": "string",
+                                "description": "IANA time zone of the stop"
+                              }
+                            },
+                            "required": [
+                              "epoch",
+                              "local",
+                              "timezone"
+                            ],
+                            "additionalProperties": false
+                          },
+                          "arrival": {
+                            "type": "object",
+                            "properties": {
+                              "epoch": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991,
+                                "description": "Unix seconds"
+                              },
+                              "local": {
+                                "type": "string",
+                                "description": "ISO-8601 local time with offset"
+                              },
+                              "timezone": {
+                                "type": "string",
+                                "description": "IANA time zone of the stop"
+                              }
+                            },
+                            "required": [
+                              "epoch",
+                              "local",
+                              "timezone"
+                            ],
+                            "additionalProperties": false
+                          },
+                          "durationSeconds": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "arrivalDayOffset": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991,
+                            "description": "Calendar days between departure and arrival local dates"
+                          },
+                          "transfers": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "legs": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "enum": [
+                                    "vehicle"
+                                  ]
+                                },
+                                "tripId": {
+                                  "type": "string"
+                                },
+                                "serviceDate": {
+                                  "type": "string",
+                                  "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                                },
+                                "mode": {
+                                  "type": "string",
+                                  "enum": [
+                                    "bus",
+                                    "rail",
+                                    "other"
+                                  ]
+                                },
+                                "operator": {
+                                  "type": "object",
+                                  "properties": {
+                                    "id": {
+                                      "type": "string"
+                                    },
+                                    "name": {
+                                      "type": "string"
+                                    },
+                                    "website": {
+                                      "nullable": true,
+                                      "type": "string"
+                                    },
+                                    "synthetic": {
+                                      "type": "boolean"
+                                    }
+                                  },
+                                  "required": [
+                                    "id",
+                                    "name",
+                                    "website",
+                                    "synthetic"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                "routeName": {
+                                  "nullable": true,
+                                  "type": "string"
+                                },
+                                "headsign": {
+                                  "nullable": true,
+                                  "type": "string"
+                                },
+                                "from": {
+                                  "type": "object",
+                                  "properties": {
+                                    "stationId": {
+                                      "type": "string"
+                                    },
+                                    "name": {
+                                      "type": "string"
+                                    },
+                                    "cityId": {
+                                      "nullable": true,
+                                      "type": "string"
+                                    },
+                                    "cityName": {
+                                      "nullable": true,
+                                      "type": "string"
+                                    },
+                                    "countryCode": {
+                                      "nullable": true,
+                                      "type": "string"
+                                    },
+                                    "lat": {
+                                      "type": "number"
+                                    },
+                                    "lon": {
+                                      "type": "number"
+                                    },
+                                    "timezone": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "stationId",
+                                    "name",
+                                    "cityId",
+                                    "cityName",
+                                    "countryCode",
+                                    "lat",
+                                    "lon",
+                                    "timezone"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                "to": {
+                                  "type": "object",
+                                  "properties": {
+                                    "stationId": {
+                                      "type": "string"
+                                    },
+                                    "name": {
+                                      "type": "string"
+                                    },
+                                    "cityId": {
+                                      "nullable": true,
+                                      "type": "string"
+                                    },
+                                    "cityName": {
+                                      "nullable": true,
+                                      "type": "string"
+                                    },
+                                    "countryCode": {
+                                      "nullable": true,
+                                      "type": "string"
+                                    },
+                                    "lat": {
+                                      "type": "number"
+                                    },
+                                    "lon": {
+                                      "type": "number"
+                                    },
+                                    "timezone": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "stationId",
+                                    "name",
+                                    "cityId",
+                                    "cityName",
+                                    "countryCode",
+                                    "lat",
+                                    "lon",
+                                    "timezone"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                "departure": {
+                                  "type": "object",
+                                  "properties": {
+                                    "epoch": {
+                                      "type": "integer",
+                                      "minimum": -9007199254740991,
+                                      "maximum": 9007199254740991,
+                                      "description": "Unix seconds"
+                                    },
+                                    "local": {
+                                      "type": "string",
+                                      "description": "ISO-8601 local time with offset"
+                                    },
+                                    "timezone": {
+                                      "type": "string",
+                                      "description": "IANA time zone of the stop"
+                                    }
+                                  },
+                                  "required": [
+                                    "epoch",
+                                    "local",
+                                    "timezone"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                "arrival": {
+                                  "type": "object",
+                                  "properties": {
+                                    "epoch": {
+                                      "type": "integer",
+                                      "minimum": -9007199254740991,
+                                      "maximum": 9007199254740991,
+                                      "description": "Unix seconds"
+                                    },
+                                    "local": {
+                                      "type": "string",
+                                      "description": "ISO-8601 local time with offset"
+                                    },
+                                    "timezone": {
+                                      "type": "string",
+                                      "description": "IANA time zone of the stop"
+                                    }
+                                  },
+                                  "required": [
+                                    "epoch",
+                                    "local",
+                                    "timezone"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                "durationSeconds": {
+                                  "type": "integer",
+                                  "minimum": -9007199254740991,
+                                  "maximum": 9007199254740991
+                                },
+                                "intermediateStops": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "stationId": {
+                                        "type": "string"
+                                      },
+                                      "name": {
+                                        "type": "string"
+                                      },
+                                      "lat": {
+                                        "type": "number"
+                                      },
+                                      "lon": {
+                                        "type": "number"
+                                      },
+                                      "arrival": {
+                                        "nullable": true,
+                                        "type": "object",
+                                        "properties": {
+                                          "epoch": {
+                                            "type": "integer",
+                                            "minimum": -9007199254740991,
+                                            "maximum": 9007199254740991,
+                                            "description": "Unix seconds"
+                                          },
+                                          "local": {
+                                            "type": "string",
+                                            "description": "ISO-8601 local time with offset"
+                                          },
+                                          "timezone": {
+                                            "type": "string",
+                                            "description": "IANA time zone of the stop"
+                                          }
+                                        },
+                                        "required": [
+                                          "epoch",
+                                          "local",
+                                          "timezone"
+                                        ],
+                                        "additionalProperties": false
+                                      },
+                                      "departure": {
+                                        "nullable": true,
+                                        "type": "object",
+                                        "properties": {
+                                          "epoch": {
+                                            "type": "integer",
+                                            "minimum": -9007199254740991,
+                                            "maximum": 9007199254740991,
+                                            "description": "Unix seconds"
+                                          },
+                                          "local": {
+                                            "type": "string",
+                                            "description": "ISO-8601 local time with offset"
+                                          },
+                                          "timezone": {
+                                            "type": "string",
+                                            "description": "IANA time zone of the stop"
+                                          }
+                                        },
+                                        "required": [
+                                          "epoch",
+                                          "local",
+                                          "timezone"
+                                        ],
+                                        "additionalProperties": false
+                                      }
+                                    },
+                                    "required": [
+                                      "stationId",
+                                      "name",
+                                      "lat",
+                                      "lon",
+                                      "arrival",
+                                      "departure"
+                                    ],
+                                    "additionalProperties": false
+                                  }
+                                },
+                                "crossesBorder": {
+                                  "type": "boolean"
+                                },
+                                "price": {
+                                  "type": "object",
+                                  "properties": {
+                                    "status": {
+                                      "type": "string",
+                                      "enum": [
+                                        "known",
+                                        "unknown"
+                                      ]
+                                    },
+                                    "amount": {
+                                      "nullable": true,
+                                      "type": "number"
+                                    },
+                                    "currency": {
+                                      "nullable": true,
+                                      "type": "string"
+                                    },
+                                    "kind": {
+                                      "nullable": true,
+                                      "type": "string",
+                                      "enum": [
+                                        "indicative",
+                                        "live"
+                                      ]
+                                    },
+                                    "observedAt": {
+                                      "nullable": true,
+                                      "type": "string"
+                                    },
+                                    "source": {
+                                      "nullable": true,
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "status",
+                                    "amount",
+                                    "currency",
+                                    "kind",
+                                    "observedAt",
+                                    "source"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                "availability": {
+                                  "type": "string",
+                                  "enum": [
+                                    "not_verified"
+                                  ],
+                                  "description": "Seat availability is never verified in v1"
+                                },
+                                "booking": {
+                                  "type": "object",
+                                  "properties": {
+                                    "kind": {
+                                      "type": "string",
+                                      "enum": [
+                                        "departure_specific",
+                                        "route_search",
+                                        "operator_homepage",
+                                        "none"
+                                      ]
+                                    },
+                                    "url": {
+                                      "nullable": true,
+                                      "type": "string"
+                                    },
+                                    "label": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "kind",
+                                    "url",
+                                    "label"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                "provenance": {
+                                  "type": "object",
+                                  "properties": {
+                                    "sourceId": {
+                                      "type": "string"
+                                    },
+                                    "sourceName": {
+                                      "type": "string"
+                                    },
+                                    "synthetic": {
+                                      "type": "boolean",
+                                      "description": "True for generated test fixtures — never real departures"
+                                    },
+                                    "license": {
+                                      "nullable": true,
+                                      "type": "string"
+                                    },
+                                    "attribution": {
+                                      "nullable": true,
+                                      "type": "string"
+                                    },
+                                    "importedAt": {
+                                      "nullable": true,
+                                      "type": "string"
+                                    },
+                                    "feedVersion": {
+                                      "nullable": true,
+                                      "type": "string"
+                                    },
+                                    "freshness": {
+                                      "type": "string",
+                                      "enum": [
+                                        "fresh",
+                                        "aging",
+                                        "stale",
+                                        "unknown"
+                                      ]
+                                    },
+                                    "realtimeApplied": {
+                                      "type": "boolean"
+                                    },
+                                    "alsoFoundIn": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "string"
+                                      },
+                                      "description": "Other sources containing an equivalent trip (deduplicated)"
+                                    }
+                                  },
+                                  "required": [
+                                    "sourceId",
+                                    "sourceName",
+                                    "synthetic",
+                                    "license",
+                                    "attribution",
+                                    "importedAt",
+                                    "feedVersion",
+                                    "freshness",
+                                    "realtimeApplied",
+                                    "alsoFoundIn"
+                                  ],
+                                  "additionalProperties": false
+                                }
+                              },
+                              "required": [
+                                "type",
+                                "tripId",
+                                "serviceDate",
+                                "mode",
+                                "operator",
+                                "routeName",
+                                "headsign",
+                                "from",
+                                "to",
+                                "departure",
+                                "arrival",
+                                "durationSeconds",
+                                "intermediateStops",
+                                "crossesBorder",
+                                "price",
+                                "availability",
+                                "booking",
+                                "provenance"
+                              ],
+                              "additionalProperties": false
+                            }
+                          },
+                          "connections": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "fromStop": {
+                                  "type": "object",
+                                  "properties": {
+                                    "stationId": {
+                                      "type": "string"
+                                    },
+                                    "name": {
+                                      "type": "string"
+                                    },
+                                    "cityId": {
+                                      "nullable": true,
+                                      "type": "string"
+                                    },
+                                    "cityName": {
+                                      "nullable": true,
+                                      "type": "string"
+                                    },
+                                    "countryCode": {
+                                      "nullable": true,
+                                      "type": "string"
+                                    },
+                                    "lat": {
+                                      "type": "number"
+                                    },
+                                    "lon": {
+                                      "type": "number"
+                                    },
+                                    "timezone": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "stationId",
+                                    "name",
+                                    "cityId",
+                                    "cityName",
+                                    "countryCode",
+                                    "lat",
+                                    "lon",
+                                    "timezone"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                "toStop": {
+                                  "type": "object",
+                                  "properties": {
+                                    "stationId": {
+                                      "type": "string"
+                                    },
+                                    "name": {
+                                      "type": "string"
+                                    },
+                                    "cityId": {
+                                      "nullable": true,
+                                      "type": "string"
+                                    },
+                                    "cityName": {
+                                      "nullable": true,
+                                      "type": "string"
+                                    },
+                                    "countryCode": {
+                                      "nullable": true,
+                                      "type": "string"
+                                    },
+                                    "lat": {
+                                      "type": "number"
+                                    },
+                                    "lon": {
+                                      "type": "number"
+                                    },
+                                    "timezone": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "stationId",
+                                    "name",
+                                    "cityId",
+                                    "cityName",
+                                    "countryCode",
+                                    "lat",
+                                    "lon",
+                                    "timezone"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                "arrival": {
+                                  "type": "object",
+                                  "properties": {
+                                    "epoch": {
+                                      "type": "integer",
+                                      "minimum": -9007199254740991,
+                                      "maximum": 9007199254740991,
+                                      "description": "Unix seconds"
+                                    },
+                                    "local": {
+                                      "type": "string",
+                                      "description": "ISO-8601 local time with offset"
+                                    },
+                                    "timezone": {
+                                      "type": "string",
+                                      "description": "IANA time zone of the stop"
+                                    }
+                                  },
+                                  "required": [
+                                    "epoch",
+                                    "local",
+                                    "timezone"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                "departure": {
+                                  "type": "object",
+                                  "properties": {
+                                    "epoch": {
+                                      "type": "integer",
+                                      "minimum": -9007199254740991,
+                                      "maximum": 9007199254740991,
+                                      "description": "Unix seconds"
+                                    },
+                                    "local": {
+                                      "type": "string",
+                                      "description": "ISO-8601 local time with offset"
+                                    },
+                                    "timezone": {
+                                      "type": "string",
+                                      "description": "IANA time zone of the stop"
+                                    }
+                                  },
+                                  "required": [
+                                    "epoch",
+                                    "local",
+                                    "timezone"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                "walk": {
+                                  "nullable": true,
+                                  "type": "object",
+                                  "properties": {
+                                    "meters": {
+                                      "type": "integer",
+                                      "minimum": -9007199254740991,
+                                      "maximum": 9007199254740991
+                                    },
+                                    "seconds": {
+                                      "type": "integer",
+                                      "minimum": -9007199254740991,
+                                      "maximum": 9007199254740991
+                                    },
+                                    "method": {
+                                      "type": "string",
+                                      "enum": [
+                                        "estimated",
+                                        "pedestrian_router",
+                                        "feed"
+                                      ]
+                                    }
+                                  },
+                                  "required": [
+                                    "meters",
+                                    "seconds",
+                                    "method"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                "waitSeconds": {
+                                  "type": "integer",
+                                  "minimum": -9007199254740991,
+                                  "maximum": 9007199254740991,
+                                  "description": "Departure minus arrival, including walking"
+                                },
+                                "slackSeconds": {
+                                  "type": "integer",
+                                  "minimum": -9007199254740991,
+                                  "maximum": 9007199254740991,
+                                  "description": "Buffer left after walking"
+                                },
+                                "quality": {
+                                  "type": "string",
+                                  "enum": [
+                                    "comfortable",
+                                    "reasonable",
+                                    "risky"
+                                  ]
+                                },
+                                "reasons": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string"
+                                  }
+                                },
+                                "separateTickets": {
+                                  "type": "boolean"
+                                },
+                                "nightSeconds": {
+                                  "type": "integer",
+                                  "minimum": -9007199254740991,
+                                  "maximum": 9007199254740991,
+                                  "description": "Part of the wait between 00:00 and 05:00 local"
+                                }
+                              },
+                              "required": [
+                                "fromStop",
+                                "toStop",
+                                "arrival",
+                                "departure",
+                                "walk",
+                                "waitSeconds",
+                                "slackSeconds",
+                                "quality",
+                                "reasons",
+                                "separateTickets",
+                                "nightSeconds"
+                              ],
+                              "additionalProperties": false
+                            }
+                          },
+                          "operators": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string"
+                                },
+                                "name": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "id",
+                                "name"
+                              ],
+                              "additionalProperties": false
+                            }
+                          },
+                          "separateTickets": {
+                            "type": "boolean"
+                          },
+                          "worstConnection": {
+                            "nullable": true,
+                            "type": "string",
+                            "enum": [
+                              "comfortable",
+                              "reasonable",
+                              "risky"
+                            ]
+                          },
+                          "walkingMeters": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "overnightWaitSeconds": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "price": {
+                            "type": "object",
+                            "properties": {
+                              "status": {
+                                "type": "string",
+                                "enum": [
+                                  "complete",
+                                  "partial",
+                                  "unknown"
+                                ]
+                              },
+                              "totals": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "amount": {
+                                      "type": "number"
+                                    },
+                                    "currency": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "amount",
+                                    "currency"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                "description": "Only when status is complete"
+                              },
+                              "kind": {
+                                "nullable": true,
+                                "type": "string",
+                                "enum": [
+                                  "indicative",
+                                  "live",
+                                  "mixed"
+                                ]
+                              },
+                              "knownLegs": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "totalLegs": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              }
+                            },
+                            "required": [
+                              "status",
+                              "totals",
+                              "kind",
+                              "knownLegs",
+                              "totalLegs"
+                            ],
+                            "additionalProperties": false
+                          },
+                          "warnings": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "code": {
+                                  "type": "string",
+                                  "enum": [
+                                    "separate_tickets",
+                                    "risky_connection",
+                                    "night_transfer",
+                                    "walking_transfer",
+                                    "synthetic_data",
+                                    "stale_data",
+                                    "price_unknown",
+                                    "availability_not_verified",
+                                    "generic_booking_link",
+                                    "cross_border",
+                                    "overnight_wait"
+                                  ]
+                                },
+                                "message": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "code",
+                                "message"
+                              ],
+                              "additionalProperties": false
+                            }
+                          },
+                          "paretoOptimal": {
+                            "type": "boolean",
+                            "description": "False for alternatives found through other transfer cities"
+                          },
+                          "alternativeTo": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "Transfer cities excluded when this alternative was found"
+                          },
+                          "synthetic": {
+                            "type": "boolean"
+                          },
+                          "score": {
+                            "type": "number",
+                            "description": "Recommended-sort score, lower is better"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "departure",
+                          "arrival",
+                          "durationSeconds",
+                          "arrivalDayOffset",
+                          "transfers",
+                          "legs",
+                          "connections",
+                          "operators",
+                          "separateTickets",
+                          "worstConnection",
+                          "walkingMeters",
+                          "overnightWaitSeconds",
+                          "price",
+                          "warnings",
+                          "paretoOptimal",
+                          "alternativeTo",
+                          "synthetic",
+                          "score"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "coverage": {
+                      "type": "object",
+                      "properties": {
+                        "sourcesConsulted": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "sourcesWithServiceInWindow": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "sources": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "name": {
+                                "type": "string"
+                              },
+                              "synthetic": {
+                                "type": "boolean"
+                              },
+                              "status": {
+                                "type": "string",
+                                "enum": [
+                                  "used",
+                                  "no_service_in_window",
+                                  "unavailable",
+                                  "stale",
+                                  "excluded_by_scope"
+                                ]
+                              },
+                              "reason": {
+                                "nullable": true,
+                                "type": "string"
+                              },
+                              "validFrom": {
+                                "nullable": true,
+                                "type": "string"
+                              },
+                              "validTo": {
+                                "nullable": true,
+                                "type": "string"
+                              },
+                              "importedAt": {
+                                "nullable": true,
+                                "type": "string"
+                              },
+                              "freshness": {
+                                "type": "string",
+                                "enum": [
+                                  "fresh",
+                                  "aging",
+                                  "stale",
+                                  "unknown"
+                                ]
+                              },
+                              "tripsInWindow": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "name",
+                              "synthetic",
+                              "status",
+                              "reason",
+                              "validFrom",
+                              "validTo",
+                              "importedAt",
+                              "freshness",
+                              "tripsInWindow"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "operatorsRepresented": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "dateCoverage": {
+                          "type": "object",
+                          "properties": {
+                            "from": {
+                              "type": "string",
+                              "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                            },
+                            "to": {
+                              "type": "string",
+                              "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                            },
+                            "fullyCovered": {
+                              "type": "boolean"
+                            }
+                          },
+                          "required": [
+                            "from",
+                            "to",
+                            "fullyCovered"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "livePricesQueried": {
+                          "type": "boolean"
+                        },
+                        "availabilityVerified": {
+                          "type": "boolean"
+                        },
+                        "syntheticDataIncluded": {
+                          "type": "boolean"
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Generated from execution metadata"
+                        }
+                      },
+                      "required": [
+                        "sourcesConsulted",
+                        "sourcesWithServiceInWindow",
+                        "sources",
+                        "operatorsRepresented",
+                        "dateCoverage",
+                        "livePricesQueried",
+                        "availabilityVerified",
+                        "syntheticDataIncluded",
+                        "message"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "diagnostics": {
+                      "type": "object",
+                      "properties": {
+                        "durationMs": {
+                          "type": "number"
+                        },
+                        "timetableBuildMs": {
+                          "type": "number"
+                        },
+                        "routingMs": {
+                          "type": "number"
+                        },
+                        "rounds": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "labelsCreated": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "searchesRun": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "truncated": {
+                          "type": "boolean"
+                        },
+                        "cached": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "durationMs",
+                        "timetableBuildMs",
+                        "routingMs",
+                        "rounds",
+                        "labelsCreated",
+                        "searchesRun",
+                        "truncated",
+                        "cached"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "apiVersion",
+                    "searchId",
+                    "outcome",
+                    "outcomeMessage",
+                    "query",
+                    "itineraries",
+                    "coverage",
+                    "diagnostics"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {}
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {}
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/journeys/{id}": {
+      "get": {
+        "summary": "Fetch an itinerary returned by a recent search (kept 7 days)",
+        "tags": [
+          "journeys"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 3,
+              "maxLength": 80
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "apiVersion": {
+                      "type": "string",
+                      "enum": [
+                        "v1"
+                      ]
+                    },
+                    "searchId": {
+                      "type": "string"
+                    },
+                    "itinerary": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "departure": {
+                          "type": "object",
+                          "properties": {
+                            "epoch": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991,
+                              "description": "Unix seconds"
+                            },
+                            "local": {
+                              "type": "string",
+                              "description": "ISO-8601 local time with offset"
+                            },
+                            "timezone": {
+                              "type": "string",
+                              "description": "IANA time zone of the stop"
+                            }
+                          },
+                          "required": [
+                            "epoch",
+                            "local",
+                            "timezone"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "arrival": {
+                          "type": "object",
+                          "properties": {
+                            "epoch": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991,
+                              "description": "Unix seconds"
+                            },
+                            "local": {
+                              "type": "string",
+                              "description": "ISO-8601 local time with offset"
+                            },
+                            "timezone": {
+                              "type": "string",
+                              "description": "IANA time zone of the stop"
+                            }
+                          },
+                          "required": [
+                            "epoch",
+                            "local",
+                            "timezone"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "durationSeconds": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "arrivalDayOffset": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991,
+                          "description": "Calendar days between departure and arrival local dates"
+                        },
+                        "transfers": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "legs": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "type": "string",
+                                "enum": [
+                                  "vehicle"
+                                ]
+                              },
+                              "tripId": {
+                                "type": "string"
+                              },
+                              "serviceDate": {
+                                "type": "string",
+                                "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                              },
+                              "mode": {
+                                "type": "string",
+                                "enum": [
+                                  "bus",
+                                  "rail",
+                                  "other"
+                                ]
+                              },
+                              "operator": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "name": {
+                                    "type": "string"
+                                  },
+                                  "website": {
+                                    "nullable": true,
+                                    "type": "string"
+                                  },
+                                  "synthetic": {
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "name",
+                                  "website",
+                                  "synthetic"
+                                ],
+                                "additionalProperties": false
+                              },
+                              "routeName": {
+                                "nullable": true,
+                                "type": "string"
+                              },
+                              "headsign": {
+                                "nullable": true,
+                                "type": "string"
+                              },
+                              "from": {
+                                "type": "object",
+                                "properties": {
+                                  "stationId": {
+                                    "type": "string"
+                                  },
+                                  "name": {
+                                    "type": "string"
+                                  },
+                                  "cityId": {
+                                    "nullable": true,
+                                    "type": "string"
+                                  },
+                                  "cityName": {
+                                    "nullable": true,
+                                    "type": "string"
+                                  },
+                                  "countryCode": {
+                                    "nullable": true,
+                                    "type": "string"
+                                  },
+                                  "lat": {
+                                    "type": "number"
+                                  },
+                                  "lon": {
+                                    "type": "number"
+                                  },
+                                  "timezone": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "stationId",
+                                  "name",
+                                  "cityId",
+                                  "cityName",
+                                  "countryCode",
+                                  "lat",
+                                  "lon",
+                                  "timezone"
+                                ],
+                                "additionalProperties": false
+                              },
+                              "to": {
+                                "type": "object",
+                                "properties": {
+                                  "stationId": {
+                                    "type": "string"
+                                  },
+                                  "name": {
+                                    "type": "string"
+                                  },
+                                  "cityId": {
+                                    "nullable": true,
+                                    "type": "string"
+                                  },
+                                  "cityName": {
+                                    "nullable": true,
+                                    "type": "string"
+                                  },
+                                  "countryCode": {
+                                    "nullable": true,
+                                    "type": "string"
+                                  },
+                                  "lat": {
+                                    "type": "number"
+                                  },
+                                  "lon": {
+                                    "type": "number"
+                                  },
+                                  "timezone": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "stationId",
+                                  "name",
+                                  "cityId",
+                                  "cityName",
+                                  "countryCode",
+                                  "lat",
+                                  "lon",
+                                  "timezone"
+                                ],
+                                "additionalProperties": false
+                              },
+                              "departure": {
+                                "type": "object",
+                                "properties": {
+                                  "epoch": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991,
+                                    "description": "Unix seconds"
+                                  },
+                                  "local": {
+                                    "type": "string",
+                                    "description": "ISO-8601 local time with offset"
+                                  },
+                                  "timezone": {
+                                    "type": "string",
+                                    "description": "IANA time zone of the stop"
+                                  }
+                                },
+                                "required": [
+                                  "epoch",
+                                  "local",
+                                  "timezone"
+                                ],
+                                "additionalProperties": false
+                              },
+                              "arrival": {
+                                "type": "object",
+                                "properties": {
+                                  "epoch": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991,
+                                    "description": "Unix seconds"
+                                  },
+                                  "local": {
+                                    "type": "string",
+                                    "description": "ISO-8601 local time with offset"
+                                  },
+                                  "timezone": {
+                                    "type": "string",
+                                    "description": "IANA time zone of the stop"
+                                  }
+                                },
+                                "required": [
+                                  "epoch",
+                                  "local",
+                                  "timezone"
+                                ],
+                                "additionalProperties": false
+                              },
+                              "durationSeconds": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "intermediateStops": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "stationId": {
+                                      "type": "string"
+                                    },
+                                    "name": {
+                                      "type": "string"
+                                    },
+                                    "lat": {
+                                      "type": "number"
+                                    },
+                                    "lon": {
+                                      "type": "number"
+                                    },
+                                    "arrival": {
+                                      "nullable": true,
+                                      "type": "object",
+                                      "properties": {
+                                        "epoch": {
+                                          "type": "integer",
+                                          "minimum": -9007199254740991,
+                                          "maximum": 9007199254740991,
+                                          "description": "Unix seconds"
+                                        },
+                                        "local": {
+                                          "type": "string",
+                                          "description": "ISO-8601 local time with offset"
+                                        },
+                                        "timezone": {
+                                          "type": "string",
+                                          "description": "IANA time zone of the stop"
+                                        }
+                                      },
+                                      "required": [
+                                        "epoch",
+                                        "local",
+                                        "timezone"
+                                      ],
+                                      "additionalProperties": false
+                                    },
+                                    "departure": {
+                                      "nullable": true,
+                                      "type": "object",
+                                      "properties": {
+                                        "epoch": {
+                                          "type": "integer",
+                                          "minimum": -9007199254740991,
+                                          "maximum": 9007199254740991,
+                                          "description": "Unix seconds"
+                                        },
+                                        "local": {
+                                          "type": "string",
+                                          "description": "ISO-8601 local time with offset"
+                                        },
+                                        "timezone": {
+                                          "type": "string",
+                                          "description": "IANA time zone of the stop"
+                                        }
+                                      },
+                                      "required": [
+                                        "epoch",
+                                        "local",
+                                        "timezone"
+                                      ],
+                                      "additionalProperties": false
+                                    }
+                                  },
+                                  "required": [
+                                    "stationId",
+                                    "name",
+                                    "lat",
+                                    "lon",
+                                    "arrival",
+                                    "departure"
+                                  ],
+                                  "additionalProperties": false
+                                }
+                              },
+                              "crossesBorder": {
+                                "type": "boolean"
+                              },
+                              "price": {
+                                "type": "object",
+                                "properties": {
+                                  "status": {
+                                    "type": "string",
+                                    "enum": [
+                                      "known",
+                                      "unknown"
+                                    ]
+                                  },
+                                  "amount": {
+                                    "nullable": true,
+                                    "type": "number"
+                                  },
+                                  "currency": {
+                                    "nullable": true,
+                                    "type": "string"
+                                  },
+                                  "kind": {
+                                    "nullable": true,
+                                    "type": "string",
+                                    "enum": [
+                                      "indicative",
+                                      "live"
+                                    ]
+                                  },
+                                  "observedAt": {
+                                    "nullable": true,
+                                    "type": "string"
+                                  },
+                                  "source": {
+                                    "nullable": true,
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "status",
+                                  "amount",
+                                  "currency",
+                                  "kind",
+                                  "observedAt",
+                                  "source"
+                                ],
+                                "additionalProperties": false
+                              },
+                              "availability": {
+                                "type": "string",
+                                "enum": [
+                                  "not_verified"
+                                ],
+                                "description": "Seat availability is never verified in v1"
+                              },
+                              "booking": {
+                                "type": "object",
+                                "properties": {
+                                  "kind": {
+                                    "type": "string",
+                                    "enum": [
+                                      "departure_specific",
+                                      "route_search",
+                                      "operator_homepage",
+                                      "none"
+                                    ]
+                                  },
+                                  "url": {
+                                    "nullable": true,
+                                    "type": "string"
+                                  },
+                                  "label": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "kind",
+                                  "url",
+                                  "label"
+                                ],
+                                "additionalProperties": false
+                              },
+                              "provenance": {
+                                "type": "object",
+                                "properties": {
+                                  "sourceId": {
+                                    "type": "string"
+                                  },
+                                  "sourceName": {
+                                    "type": "string"
+                                  },
+                                  "synthetic": {
+                                    "type": "boolean",
+                                    "description": "True for generated test fixtures — never real departures"
+                                  },
+                                  "license": {
+                                    "nullable": true,
+                                    "type": "string"
+                                  },
+                                  "attribution": {
+                                    "nullable": true,
+                                    "type": "string"
+                                  },
+                                  "importedAt": {
+                                    "nullable": true,
+                                    "type": "string"
+                                  },
+                                  "feedVersion": {
+                                    "nullable": true,
+                                    "type": "string"
+                                  },
+                                  "freshness": {
+                                    "type": "string",
+                                    "enum": [
+                                      "fresh",
+                                      "aging",
+                                      "stale",
+                                      "unknown"
+                                    ]
+                                  },
+                                  "realtimeApplied": {
+                                    "type": "boolean"
+                                  },
+                                  "alsoFoundIn": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string"
+                                    },
+                                    "description": "Other sources containing an equivalent trip (deduplicated)"
+                                  }
+                                },
+                                "required": [
+                                  "sourceId",
+                                  "sourceName",
+                                  "synthetic",
+                                  "license",
+                                  "attribution",
+                                  "importedAt",
+                                  "feedVersion",
+                                  "freshness",
+                                  "realtimeApplied",
+                                  "alsoFoundIn"
+                                ],
+                                "additionalProperties": false
+                              }
+                            },
+                            "required": [
+                              "type",
+                              "tripId",
+                              "serviceDate",
+                              "mode",
+                              "operator",
+                              "routeName",
+                              "headsign",
+                              "from",
+                              "to",
+                              "departure",
+                              "arrival",
+                              "durationSeconds",
+                              "intermediateStops",
+                              "crossesBorder",
+                              "price",
+                              "availability",
+                              "booking",
+                              "provenance"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "connections": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "fromStop": {
+                                "type": "object",
+                                "properties": {
+                                  "stationId": {
+                                    "type": "string"
+                                  },
+                                  "name": {
+                                    "type": "string"
+                                  },
+                                  "cityId": {
+                                    "nullable": true,
+                                    "type": "string"
+                                  },
+                                  "cityName": {
+                                    "nullable": true,
+                                    "type": "string"
+                                  },
+                                  "countryCode": {
+                                    "nullable": true,
+                                    "type": "string"
+                                  },
+                                  "lat": {
+                                    "type": "number"
+                                  },
+                                  "lon": {
+                                    "type": "number"
+                                  },
+                                  "timezone": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "stationId",
+                                  "name",
+                                  "cityId",
+                                  "cityName",
+                                  "countryCode",
+                                  "lat",
+                                  "lon",
+                                  "timezone"
+                                ],
+                                "additionalProperties": false
+                              },
+                              "toStop": {
+                                "type": "object",
+                                "properties": {
+                                  "stationId": {
+                                    "type": "string"
+                                  },
+                                  "name": {
+                                    "type": "string"
+                                  },
+                                  "cityId": {
+                                    "nullable": true,
+                                    "type": "string"
+                                  },
+                                  "cityName": {
+                                    "nullable": true,
+                                    "type": "string"
+                                  },
+                                  "countryCode": {
+                                    "nullable": true,
+                                    "type": "string"
+                                  },
+                                  "lat": {
+                                    "type": "number"
+                                  },
+                                  "lon": {
+                                    "type": "number"
+                                  },
+                                  "timezone": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "stationId",
+                                  "name",
+                                  "cityId",
+                                  "cityName",
+                                  "countryCode",
+                                  "lat",
+                                  "lon",
+                                  "timezone"
+                                ],
+                                "additionalProperties": false
+                              },
+                              "arrival": {
+                                "type": "object",
+                                "properties": {
+                                  "epoch": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991,
+                                    "description": "Unix seconds"
+                                  },
+                                  "local": {
+                                    "type": "string",
+                                    "description": "ISO-8601 local time with offset"
+                                  },
+                                  "timezone": {
+                                    "type": "string",
+                                    "description": "IANA time zone of the stop"
+                                  }
+                                },
+                                "required": [
+                                  "epoch",
+                                  "local",
+                                  "timezone"
+                                ],
+                                "additionalProperties": false
+                              },
+                              "departure": {
+                                "type": "object",
+                                "properties": {
+                                  "epoch": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991,
+                                    "description": "Unix seconds"
+                                  },
+                                  "local": {
+                                    "type": "string",
+                                    "description": "ISO-8601 local time with offset"
+                                  },
+                                  "timezone": {
+                                    "type": "string",
+                                    "description": "IANA time zone of the stop"
+                                  }
+                                },
+                                "required": [
+                                  "epoch",
+                                  "local",
+                                  "timezone"
+                                ],
+                                "additionalProperties": false
+                              },
+                              "walk": {
+                                "nullable": true,
+                                "type": "object",
+                                "properties": {
+                                  "meters": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  "seconds": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  "method": {
+                                    "type": "string",
+                                    "enum": [
+                                      "estimated",
+                                      "pedestrian_router",
+                                      "feed"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "meters",
+                                  "seconds",
+                                  "method"
+                                ],
+                                "additionalProperties": false
+                              },
+                              "waitSeconds": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991,
+                                "description": "Departure minus arrival, including walking"
+                              },
+                              "slackSeconds": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991,
+                                "description": "Buffer left after walking"
+                              },
+                              "quality": {
+                                "type": "string",
+                                "enum": [
+                                  "comfortable",
+                                  "reasonable",
+                                  "risky"
+                                ]
+                              },
+                              "reasons": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
+                              "separateTickets": {
+                                "type": "boolean"
+                              },
+                              "nightSeconds": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991,
+                                "description": "Part of the wait between 00:00 and 05:00 local"
+                              }
+                            },
+                            "required": [
+                              "fromStop",
+                              "toStop",
+                              "arrival",
+                              "departure",
+                              "walk",
+                              "waitSeconds",
+                              "slackSeconds",
+                              "quality",
+                              "reasons",
+                              "separateTickets",
+                              "nightSeconds"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "operators": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "name": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "name"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "separateTickets": {
+                          "type": "boolean"
+                        },
+                        "worstConnection": {
+                          "nullable": true,
+                          "type": "string",
+                          "enum": [
+                            "comfortable",
+                            "reasonable",
+                            "risky"
+                          ]
+                        },
+                        "walkingMeters": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "overnightWaitSeconds": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "price": {
+                          "type": "object",
+                          "properties": {
+                            "status": {
+                              "type": "string",
+                              "enum": [
+                                "complete",
+                                "partial",
+                                "unknown"
+                              ]
+                            },
+                            "totals": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "amount": {
+                                    "type": "number"
+                                  },
+                                  "currency": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "amount",
+                                  "currency"
+                                ],
+                                "additionalProperties": false
+                              },
+                              "description": "Only when status is complete"
+                            },
+                            "kind": {
+                              "nullable": true,
+                              "type": "string",
+                              "enum": [
+                                "indicative",
+                                "live",
+                                "mixed"
+                              ]
+                            },
+                            "knownLegs": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "totalLegs": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            }
+                          },
+                          "required": [
+                            "status",
+                            "totals",
+                            "kind",
+                            "knownLegs",
+                            "totalLegs"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "warnings": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "code": {
+                                "type": "string",
+                                "enum": [
+                                  "separate_tickets",
+                                  "risky_connection",
+                                  "night_transfer",
+                                  "walking_transfer",
+                                  "synthetic_data",
+                                  "stale_data",
+                                  "price_unknown",
+                                  "availability_not_verified",
+                                  "generic_booking_link",
+                                  "cross_border",
+                                  "overnight_wait"
+                                ]
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "code",
+                              "message"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "paretoOptimal": {
+                          "type": "boolean",
+                          "description": "False for alternatives found through other transfer cities"
+                        },
+                        "alternativeTo": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "description": "Transfer cities excluded when this alternative was found"
+                        },
+                        "synthetic": {
+                          "type": "boolean"
+                        },
+                        "score": {
+                          "type": "number",
+                          "description": "Recommended-sort score, lower is better"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "departure",
+                        "arrival",
+                        "durationSeconds",
+                        "arrivalDayOffset",
+                        "transfers",
+                        "legs",
+                        "connections",
+                        "operators",
+                        "separateTickets",
+                        "worstConnection",
+                        "walkingMeters",
+                        "overnightWaitSeconds",
+                        "price",
+                        "warnings",
+                        "paretoOptimal",
+                        "alternativeTo",
+                        "synthetic",
+                        "score"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "apiVersion",
+                    "searchId",
+                    "itinerary"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {}
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/operators": {
+      "get": {
+        "summary": "Operators present in imported data",
+        "tags": [
+          "catalogue"
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "apiVersion": {
+                      "type": "string",
+                      "enum": [
+                        "v1"
+                      ]
+                    },
+                    "operators": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "website": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "countryCode": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "synthetic": {
+                            "type": "boolean"
+                          },
+                          "sources": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "name",
+                          "website",
+                          "countryCode",
+                          "synthetic",
+                          "sources"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "apiVersion",
+                    "operators"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/data-sources/status": {
+      "get": {
+        "summary": "Registered timetable sources, adapter status and verified live status",
+        "tags": [
+          "catalogue"
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "apiVersion": {
+                      "type": "string",
+                      "enum": [
+                        "v1"
+                      ]
+                    },
+                    "sources": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "kind": {
+                            "type": "string"
+                          },
+                          "synthetic": {
+                            "type": "boolean"
+                          },
+                          "adapterStatus": {
+                            "type": "string",
+                            "enum": [
+                              "implemented",
+                              "fixture_only",
+                              "not_implemented"
+                            ]
+                          },
+                          "liveStatus": {
+                            "type": "string",
+                            "enum": [
+                              "verified_working",
+                              "failing",
+                              "never_run",
+                              "not_applicable"
+                            ]
+                          },
+                          "enabled": {
+                            "type": "boolean"
+                          },
+                          "license": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "lastImport": {
+                            "nullable": true,
+                            "type": "object",
+                            "properties": {
+                              "startedAt": {
+                                "type": "string"
+                              },
+                              "finishedAt": {
+                                "nullable": true,
+                                "type": "string"
+                              },
+                              "status": {
+                                "type": "string",
+                                "enum": [
+                                  "running",
+                                  "success",
+                                  "skipped_unchanged",
+                                  "failed"
+                                ]
+                              },
+                              "message": {
+                                "nullable": true,
+                                "type": "string"
+                              },
+                              "stats": {
+                                "nullable": true,
+                                "type": "object",
+                                "additionalProperties": {
+                                  "type": "number"
+                                }
+                              },
+                              "validFrom": {
+                                "nullable": true,
+                                "type": "string"
+                              },
+                              "validTo": {
+                                "nullable": true,
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "startedAt",
+                              "finishedAt",
+                              "status",
+                              "message",
+                              "stats",
+                              "validFrom",
+                              "validTo"
+                            ],
+                            "additionalProperties": false
+                          },
+                          "health": {
+                            "nullable": true,
+                            "type": "object",
+                            "properties": {
+                              "checkedAt": {
+                                "type": "string"
+                              },
+                              "ok": {
+                                "type": "boolean"
+                              },
+                              "latencyMs": {
+                                "nullable": true,
+                                "type": "number"
+                              },
+                              "message": {
+                                "nullable": true,
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "checkedAt",
+                              "ok",
+                              "latencyMs",
+                              "message"
+                            ],
+                            "additionalProperties": false
+                          },
+                          "freshness": {
+                            "type": "string",
+                            "enum": [
+                              "fresh",
+                              "aging",
+                              "stale",
+                              "unknown"
+                            ]
+                          },
+                          "counts": {
+                            "type": "object",
+                            "properties": {
+                              "stations": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "trips": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "operators": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              }
+                            },
+                            "required": [
+                              "stations",
+                              "trips",
+                              "operators"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "name",
+                          "kind",
+                          "synthetic",
+                          "adapterStatus",
+                          "liveStatus",
+                          "enabled",
+                          "license",
+                          "lastImport",
+                          "health",
+                          "freshness",
+                          "counts"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "apiVersion",
+                    "sources"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/internal/v1/sources/{id}/{job}": {
+      "post": {
+        "summary": "Trigger a schedule import or realtime pull for a source",
+        "tags": [
+          "internal"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "default": false,
+              "type": "boolean"
+            },
+            "in": "query",
+            "name": "force",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "import",
+                "realtime"
+              ]
+            },
+            "in": "path",
+            "name": "job",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/internal/v1/diagnostics": {
+      "get": {
+        "summary": "Timetable cache, counts and recent searches",
+        "tags": [
+          "internal"
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "places",
+      "description": "City and station autocomplete"
+    },
+    {
+      "name": "journeys",
+      "description": "Multi-operator journey search"
+    },
+    {
+      "name": "catalogue",
+      "description": "Operators and data sources"
+    },
+    {
+      "name": "internal",
+      "description": "Ingestion and diagnostics (token protected)"
+    }
+  ]
+}
