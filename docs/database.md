@@ -48,7 +48,8 @@ erDiagram
 | `price_observation` | Explicit prices per dated leg (`indicative` or `live`), e.g. from a licensed fare API. They take precedence over zone fares. |
 | `transfer_edge` | Walking links between distinct stations within 1 km: `estimated`, `pedestrian_router` (OSRM) or `feed` (transfers.txt). |
 | `realtime_update` | Latest GTFS-RT TripUpdate per dated trip (6 h retention). |
-| `delay_stat` | Per service and station delay percentiles — the hook for empirical connection risk (not yet populated: no historical data collected). |
+| `delay_observation` | Last reported/predicted delay per dated stop of **coach** trips (`mode = 'bus'`), written on every GTFS-RT poll once a stop is within 15 min of its scheduled time. Keyed by source ids with no FK to `trip`/`service`, so schedule re-imports do not erase it. 400-day retention. |
+| `delay_stat` | p50/p90 delay per (source, route, station), recomputed every 30 min from observations of stops that are already past. Collected for the future empirical connection risk; **no routing code reads it yet**. |
 | `search_log`, `itinerary_snapshot` | Search transparency and `GET /journeys/:id` (7 days). |
 
 ## Identifiers

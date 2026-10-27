@@ -30,11 +30,11 @@ docker compose --profile app up --build
 - Web: http://localhost:3000. API: http://localhost:4080, with docs at http://localhost:4080/api/docs.
 - Without configuration the stack imports only the **synthetic test fixtures** used by the tests. Every itinerary built from them
   carries a purple "Test data" label: none of those departures exist.
-- For real open data (FlixBus, BlaBlaCar Bus, German long-distance rail), read the licences in
+- For real open coach data (FlixBus, BlaBlaCar Bus, plus FlixBus delay history), read the licences in
   [docs/data-sources.md](docs/data-sources.md) first, then run:
 
   ```bash
-  ENABLED_SOURCES=default,flixbus-eu-gtfs,blablacar-bus-gtfs,gtfs-de-fv docker compose --profile app up --build
+  ENABLED_SOURCES=default,flixbus-eu-gtfs,blablacar-bus-gtfs,flixbus-eu-gtfs-rt docker compose --profile app up --build
   ```
 
 - For a public deployment like the demo, copy `.env.example` to `.env`. It enables the real

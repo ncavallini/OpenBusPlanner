@@ -32,8 +32,8 @@
 
 ## Routing quality
 
-7. Collect GTFS-RT history into `delay_stat` (p50/p90 per service and station) to drive empirical
-   connection risk.
+7. GTFS-RT history is now collected into `delay_observation`/`delay_stat` (coach trips only). Verify against a
+   real poll, then use the statistics for empirical connection risk once enough history exists.
 8. Exact handling of the maximum-wait corner case: carry a "latest useful arrival" interval in
    labels, or run a bounded second pass.
 9. OSRM foot router in Compose (Europe extract) for OSM-based walking transfers; optional

@@ -15,7 +15,6 @@ export interface SearchState {
   maxTransfers: number;
   notBeforeDate: string;
   notBeforeTime: string;
-  rail: boolean;
   risk: 'cautious' | 'balanced' | 'adventurous';
   excludeRisky: boolean;
   minTransfer: number;
@@ -160,9 +159,6 @@ export function SearchForm({ initial, onSubmit, busy }: { initial: SearchState; 
           <div className="flex flex-col justify-end gap-2 text-sm">
             <label className="inline-flex items-center gap-2">
               <input type="checkbox" checked={s.excludeRisky} onChange={(e) => set('excludeRisky', e.target.checked)} /> Hide risky connections
-            </label>
-            <label className="inline-flex items-center gap-2">
-              <input type="checkbox" checked={s.rail} onChange={(e) => set('rail', e.target.checked)} /> Include trains
             </label>
           </div>
         </div>

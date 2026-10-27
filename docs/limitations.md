@@ -31,8 +31,12 @@
   protected ticket is unknown. The UI says so instead of guessing.
 - Walking is one footpath per transfer, within 1 km by default, between *stations*. There is no
   door-to-door street routing for the first or last mile.
-- Connection risk uses rules. `delay_stat` exists, but no historical delays are collected yet, so
-  no empirical tightening happens in practice.
+- Connection risk uses rules. `delay_stat` is filled from GTFS-RT only when `flixbus-eu-gtfs-rt` is enabled,
+  covers FlixBus coaches only (FlixTrain is skipped), and nothing in routing reads it yet. A sample is the last
+  delay the feed reported or predicted for a stop, not a verified actual arrival; if the feed drops a stop
+  before the bus arrives, the sample is a late prediction. Statistics become meaningful only after weeks of data.
+- Searches are coach-only: the web UI has no train option. The API still accepts `transportModes: ['bus','rail']`
+  and rail data may exist in the database (e.g. `gtfs-de-fv`), but it is not used unless a client asks for it.
 
 ## Data handling
 
