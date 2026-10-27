@@ -38,7 +38,11 @@ export async function buildServer(deps: ServerDeps): Promise<FastifyInstance> {
     logger:
       config.logLevel === 'silent'
         ? false
-        : { level: config.logLevel, redact: ['req.headers.authorization', 'req.headers["x-internal-token"]'] },
+        : {
+            level: config.logLevel,
+            // Client IPs are never logged (see the web /privacy page); the rate limiter keeps them in memory only.
+            redact: { paths: ['req.headers.authorization', 'req.headers["x-internal-token"]', 'req.remoteAddress', 'req.remotePort'], remove: true },
+          },
     // Unversioned /api/... paths are aliases of the current version.
     rewriteUrl: (req) => {
       const url = req.url ?? '/';

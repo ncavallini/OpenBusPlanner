@@ -19,7 +19,7 @@ availability are not yet connected, and operators that publish no open data are 
 
 **Operators and data publishers:** we would like to add your network, with the attribution
 and licence you require, and to link each journey to your own booking site. Please contact
-Niccolò Cavallini, PCN Group: n.cavallini@bluewin.ch.
+Niccolò Cavallini, PCN Group: n.cavallini@pcngroup.ch.
 
 ## Quick start (Docker)
 
@@ -119,7 +119,7 @@ in the spec publish no open data. See also the [roadmap](docs/roadmap.md) and th
 The code is source-available under the [Business Source License 1.1](LICENSE), licensor PCN Group.
 You may read, modify and run it for non-production use (development, testing, research).
 Production use, including running it as a public website or service, requires a commercial
-licence: contact n.cavallini@bluewin.ch. Each version becomes available under AGPL-3.0-or-later
+licence: contact n.cavallini@pcngroup.ch. Each version becomes available under AGPL-3.0-or-later
 four years after its publication.
 
 ## Licences of data

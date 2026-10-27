@@ -38,7 +38,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <Link className="underline" href="/sources">
             data sources
           </Link>{' '}
-          page, under their respective licences. Map data © OpenStreetMap contributors.
+          page, under their respective licences. Map data © OpenStreetMap contributors. ·{' '}
+          <Link className="underline" href="/privacy">
+            Privacy
+          </Link>
         </footer>
       </body>
     </html>
