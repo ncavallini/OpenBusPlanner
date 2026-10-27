@@ -17,6 +17,18 @@
 5. Licensed fare / availability APIs writing `price_observation(kind = 'live')` and an
    availability status per leg, with explicit TTLs.
 6. Departure-specific deep links where operators or affiliate programmes document them.
+7. **Split-ticket vs. through-ticket pricing.** Observed by the project owner on FlixBus: for a
+   two-leg same-operator journey (e.g. Zürich → Milan + Milan → Florence), buying two separate
+   tickets has been 20–30% cheaper than the single connecting ticket. Once a fare API is available:
+   - for multi-leg itineraries with the same operator, query **both** the through ticket (whole
+     journey as one booking) and each leg separately;
+   - present both options with their totals, flag the cheaper one, and state the trade-off
+     clearly: the through ticket includes the operator's missed-connection protection, separate
+     tickets do not (the `separate_tickets` warning applies only to the split option);
+   - optionally check splitting a *single* long leg at an intermediate stop (same bus, two
+     tickets). Only offer it where the operator's terms allow it;
+   - store each option as its own price observation (`kind = 'live'`, with a TTL) and never mix
+     live and indicative prices in one total without labelling it.
 
 ## Routing quality
 

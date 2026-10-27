@@ -98,7 +98,7 @@ export function SearchPage() {
   const [expanded, setExpanded] = useState<string | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
   const [compare, setCompare] = useState<string[]>([]);
-  const [sort, setSort] = useState<SortKey>('recommended');
+  const [sort, setSort] = useState<SortKey>('departure');
   const [filters, setFilters] = useState({ maxTransfers: 9, hideRisky: false, paretoOnly: false, operator: '' });
   const ctrl = useRef<AbortController | null>(null);
 
@@ -186,8 +186,8 @@ export function SearchPage() {
                   <label className="inline-flex items-center gap-1">
                     Sort
                     <Select aria-label="Sort results" data-testid="sort-select" className="h-9 w-40" value={sort} onChange={(e) => setSort(e.target.value as SortKey)}>
-                      <option value="recommended">Recommended</option>
                       <option value="departure">Departure time</option>
+                      <option value="recommended">Recommended</option>
                       <option value="arrival">Arrival time</option>
                       <option value="duration">Duration</option>
                       <option value="transfers">Fewest transfers</option>

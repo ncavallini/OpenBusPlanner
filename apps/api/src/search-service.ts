@@ -67,6 +67,8 @@ export interface SearchDeps {
   sql: Sql;
   timetables: TimetableCache;
   defaultScope: DataScope;
+  /** Ignore the requested scope and search real sources only (public deployments). */
+  realDataOnly?: boolean;
   timeoutMs: number;
 }
 
@@ -79,7 +81,7 @@ export async function runJourneySearch(
   const parsed = JourneySearchRequest.safeParse(input);
   if (!parsed.success) throw new SearchError('invalid_request', parsed.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join('; '));
   const q: JourneySearchQuery = parsed.data;
-  const scope = q.dataScope ?? deps.defaultScope;
+  const scope = deps.realDataOnly ? 'real' : (q.dataScope ?? deps.defaultScope);
 
   const [origin, destination] = await Promise.all([resolvePlace(deps.sql, q.origin), resolvePlace(deps.sql, q.destination)]);
   if (origin.place.id === destination.place.id) throw new SearchError('same_place', 'Origin and destination are the same place');

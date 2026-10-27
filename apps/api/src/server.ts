@@ -127,7 +127,7 @@ export async function buildServer(deps: ServerDeps): Promise<FastifyInstance> {
       const cached = await deps.cache.get<z.infer<typeof JourneySearchResponse>>(cacheKey);
       if (cached) return { ...cached, diagnostics: { ...cached.diagnostics, cached: true } };
       const res = await runJourneySearch(
-        { sql, timetables, defaultScope: config.defaultDataScope, timeoutMs: config.searchTimeoutMs },
+        { sql, timetables, defaultScope: config.defaultDataScope, realDataOnly: config.realDataOnly, timeoutMs: config.searchTimeoutMs },
         req.body,
         { signal: controller.signal },
       );
@@ -161,7 +161,7 @@ export async function buildServer(deps: ServerDeps): Promise<FastifyInstance> {
     '/api/v1/operators',
     { schema: { tags: ['catalogue'], summary: 'Operators present in imported data', response: { 200: OperatorsResponse } } },
     async () => {
-      const rows = await listOperators(sql);
+      const rows = (await listOperators(sql)).filter((o) => !(config.realDataOnly && o.synthetic));
       return {
         apiVersion: API_VERSION,
         operators: rows.map((o) => ({
@@ -185,7 +185,7 @@ export async function buildServer(deps: ServerDeps): Promise<FastifyInstance> {
         response: { 200: DataSourcesResponse },
       },
     },
-    async () => ({ apiVersion: API_VERSION, sources: await sourceStatuses(sql) }),
+    async () => ({ apiVersion: API_VERSION, sources: (await sourceStatuses(sql)).filter((s) => !(config.realDataOnly && s.synthetic)) }),
   );
 
   // ---------------------------------------------------------------- internal

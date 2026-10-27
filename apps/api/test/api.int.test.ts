@@ -254,6 +254,21 @@ describe('catalogue API', () => {
     expect(by['swiss-netex']).toMatchObject({ adapterStatus: 'not_implemented' });
   });
 
+  it('hides synthetic data entirely when fixtures are disabled (public deployment)', async () => {
+    const pub = await buildServer({ sql, config: { ...loadConfig({ DISABLE_FIXTURES: '1' }), logLevel: 'silent', rateLimitPerMinute: 100_000, dataVersionTtlMs: 0 }, cache: noCache });
+    try {
+      const res = (await pub.inject({ method: 'POST', url: '/api/journeys/search', payload: SCENARIO })).json() as JourneySearchResponse;
+      expect(res.itineraries).toEqual([]);
+      const ops = (await pub.inject({ url: '/api/operators' })).json().operators as Array<{ synthetic: boolean }>;
+      expect(ops.some((o) => o.synthetic)).toBe(false);
+      const sources = (await pub.inject({ url: '/api/v1/data-sources/status' })).json().sources as Array<{ id: string; synthetic: boolean }>;
+      expect(sources.some((s) => s.synthetic)).toBe(false);
+      expect(sources.map((s) => s.id)).toContain('flixbus-eu-gtfs');
+    } finally {
+      await pub.close();
+    }
+  });
+
   it('exposes OpenAPI documentation', async () => {
     const res = await app.inject({ url: '/api/docs/json' });
     expect(res.statusCode).toBe(200);

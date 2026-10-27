@@ -29,8 +29,11 @@ pnpm ingest import flixbus-eu-gtfs
 Before enabling a source, read its licence and attribution in `docs/data-sources.md`. ÖBB data
 requires accepting their terms; the Open Data Hub API requires an agreement for production use.
 
-To run without any synthetic data in production, set `DISABLE_FIXTURES=1` and
-`DEFAULT_DATA_SCOPE=real`.
+To run without any synthetic data in production (public demo), set `DISABLE_FIXTURES=1`. The
+worker then skips the fixtures, and the API searches only real sources whatever `dataScope` a
+request asks for, and leaves synthetic operators and sources out of `/operators` and `/sources`.
+On a database that already contains fixtures, start from an empty volume so autocomplete does
+not suggest fixture stations.
 
 ## Configuration
 
@@ -39,7 +42,7 @@ To run without any synthetic data in production, set `DISABLE_FIXTURES=1` and
 | `DATABASE_URL` | `postgres://openbus:openbus@localhost:55432/openbus` | api, worker, CLI |
 | `REDIS_URL` | — (API runs without cache/queue) | api, worker |
 | `ENABLED_SOURCES` | `default` | worker / CLI seed |
-| `DISABLE_FIXTURES` | — | registry |
+| `DISABLE_FIXTURES` | — | registry, api (forces scope `real`) |
 | `DEFAULT_DATA_SCOPE` | `all` | api |
 | `SEARCH_TIMEOUT_MS` | `10000` | api (routing time budget) |
 | `RATE_LIMIT_PER_MINUTE` | `120` | api |

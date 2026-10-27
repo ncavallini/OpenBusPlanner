@@ -6,6 +6,8 @@ export interface ApiConfig {
   databaseUrl: string | undefined;
   redisUrl: string | undefined;
   defaultDataScope: DataScope;
+  /** DISABLE_FIXTURES=1: synthetic data is never searched or listed, whatever the request asks. */
+  realDataOnly: boolean;
   searchTimeoutMs: number;
   rateLimitPerMinute: number;
   internalToken: string | undefined;
@@ -17,12 +19,14 @@ export interface ApiConfig {
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
   const scope = (env.DEFAULT_DATA_SCOPE ?? 'all') as DataScope;
+  const realDataOnly = env.DISABLE_FIXTURES === '1';
   return {
     port: Number(env.PORT ?? 4080),
     host: env.HOST ?? '0.0.0.0',
     databaseUrl: env.DATABASE_URL,
     redisUrl: env.REDIS_URL,
-    defaultDataScope: ['all', 'real', 'synthetic'].includes(scope) ? scope : 'all',
+    defaultDataScope: realDataOnly ? 'real' : ['all', 'real', 'synthetic'].includes(scope) ? scope : 'all',
+    realDataOnly,
     searchTimeoutMs: Number(env.SEARCH_TIMEOUT_MS ?? 10_000),
     rateLimitPerMinute: Number(env.RATE_LIMIT_PER_MINUTE ?? 120),
     internalToken: env.INTERNAL_API_TOKEN,
