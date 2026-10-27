@@ -2,6 +2,7 @@
   "name": "openbus-planner",
   "private": true,
   "version": "0.1.0",
+  "license": "BUSL-1.1",
   "description": "Operator-independent, schedule-aware long-distance bus journey planner for Europe",
   "packageManager": "pnpm@9.15.0",
   "engines": {

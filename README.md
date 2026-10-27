@@ -114,6 +114,14 @@ See [docs/limitations.md](docs/limitations.md), especially on coverage: several 
 in the spec publish no open data. See also the [roadmap](docs/roadmap.md) and the
 [deployment guide](docs/deployment.md).
 
+## Licence
+
+The code is source-available under the [Business Source License 1.1](LICENSE), licensor PCN Group.
+You may read, modify and run it for non-production use (development, testing, research).
+Production use, including running it as a public website or service, requires a commercial
+licence: contact n.cavallini@bluewin.ch. Each version becomes available under AGPL-3.0-or-later
+four years after its publication.
+
 ## Licences of data
 
 Timetable data belongs to its publishers and is used under their licences (ODbL 1.0 for FlixBus
