@@ -1,5 +1,9 @@
 # OpenBus Planner
 
+**Live demo: [openbus.pcngroup.ch](https://openbus.pcngroup.ch)** · developed by PCN Group
+
+![Lyon → Venice: a BlaBlaCar Bus + FlixBus connection, with transfer quality and data provenance per leg](docs/images/demo-search.png)
+
 An operator-independent, schedule-aware planner for long-distance bus journeys in Europe. Given two
 cities and a desired **departure or arrival time**, it searches *dated* departures from every
 imported timetable and combines unrelated operators on separate tickets. Transfer cities are
@@ -9,6 +13,14 @@ classifies how risky each connection is and reports exactly which data it search
 It is a discovery and referral tool. It does not sell tickets, and it never presents timetable
 existence as ticket availability.
 
+The public demo uses only real, openly licensed timetables (FlixBus, BlaBlaCar Bus and German
+long-distance rail; see [Data sources](https://openbus.pcngroup.ch/sources)). Prices and seat
+availability are not yet connected, and operators that publish no open data are not included.
+
+**Operators and data publishers:** we would like to add your network, with the attribution
+and licence you require, and to link each journey to your own booking site. Please contact
+Niccolò Cavallini, PCN Group: n.cavallini@bluewin.ch.
+
 ## Quick start (Docker)
 
 ```bash
@@ -16,7 +28,7 @@ docker compose --profile app up --build
 ```
 
 - Web: http://localhost:3000. API: http://localhost:4080, with docs at http://localhost:4080/api/docs.
-- The default start imports only the **synthetic test fixtures**. Every itinerary built from them
+- Without configuration the stack imports only the **synthetic test fixtures** used by the tests. Every itinerary built from them
   carries a purple "Test data" label: none of those departures exist.
 - For real open data (FlixBus, BlaBlaCar Bus, German long-distance rail), read the licences in
   [docs/data-sources.md](docs/data-sources.md) first, then run:
@@ -24,6 +36,9 @@ docker compose --profile app up --build
   ```bash
   ENABLED_SOURCES=default,flixbus-eu-gtfs,blablacar-bus-gtfs,gtfs-de-fv docker compose --profile app up --build
   ```
+
+- For a public deployment like the demo, copy `.env.example` to `.env`. It enables the real
+  sources and sets `DISABLE_FIXTURES=1`, so test data is never imported, searched or listed.
 
 Try the spec scenario on the fixtures: **Zürich → Bolzano, Arrival, 2026-11-08, Early morning
 (04–08)**, *More options* → depart no earlier than 2026-11-07 12:00. Or open:
@@ -92,7 +107,8 @@ What works today, verified on the development machine on 2026-10-26:
   multi-operator itineraries, e.g. BlaBlaCar Lyon → Milan + FlixBus Milan → Venice.
 - The full synthetic Zurich → Bolzano scenario with exact expected results.
 - Docker Compose stack.
-- 165 unit, 14 integration and 14 browser tests passing.
+- 165 unit, 15 integration and 14 browser tests passing.
+- Public demo at [openbus.pcngroup.ch](https://openbus.pcngroup.ch) with real data only (since 2026-10-27).
 
 See [docs/limitations.md](docs/limitations.md), especially on coverage: several operators named
 in the spec publish no open data. See also the [roadmap](docs/roadmap.md) and the
