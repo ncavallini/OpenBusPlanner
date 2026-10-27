@@ -14,14 +14,14 @@ Services:
 |---|---|---|
 | `postgres` | `postgis/postgis:16-3.4` | System of record (volume `pgdata`) |
 | `redis` | `redis:7.4-alpine` | BullMQ job queue + search result cache (optional for the API) |
-| `worker` | `Dockerfile` target `worker` | Migrates, seeds `ENABLED_SOURCES` on start, schedules refreshes per source (`refreshHours`), polls GTFS-RT, runs health checks every 15 min |
+| `worker` | `Dockerfile` target `worker` | Migrates, seeds `ENABLED_SOURCES` on start, schedules refreshes per source (`refreshHours`), polls GTFS-RT (recording coach delay samples), recomputes `delay_stat` every 30 min, runs health checks every 15 min |
 | `api` | target `api` | Fastify API on 4080; migrates on start |
 | `web` | target `web` | Next.js standalone server on 3000; proxies `/api/*` to `api` |
 
 ### Enabling real data
 
 ```bash
-ENABLED_SOURCES=default,flixbus-eu-gtfs,blablacar-bus-gtfs,gtfs-de-fv docker compose --profile app up -d
+ENABLED_SOURCES=default,flixbus-eu-gtfs,blablacar-bus-gtfs,flixbus-eu-gtfs-rt docker compose --profile app up -d
 # or import once by hand (also works outside Docker):
 pnpm ingest import flixbus-eu-gtfs
 ```

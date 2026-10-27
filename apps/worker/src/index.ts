@@ -5,7 +5,7 @@
  * last successful import.
  */
 import { createSql, migrate } from '@openbus/db';
-import { adapterFor, loadRegistry, recordHealth, seed, syncRealtime, syncSchedule } from '@openbus/ingest';
+import { adapterFor, loadRegistry, recordHealth, refreshDelayStats, seed, syncRealtime, syncSchedule } from '@openbus/ingest';
 import { Queue, Worker } from 'bullmq';
 
 const log = (msg: string, data?: Record<string, unknown>) =>
@@ -22,7 +22,7 @@ if (process.env.SEED_ON_START !== '0') {
   log('seed finished', res);
 }
 
-type Job = { type: 'schedule' | 'realtime' | 'health'; sourceId?: string; force?: boolean };
+type Job = { type: 'schedule' | 'realtime' | 'health' | 'delay-stats'; sourceId?: string; force?: boolean };
 const queue = new Queue<Job>('ingest', { connection });
 
 // Repeatable jobs derived from the registry.
@@ -35,6 +35,7 @@ for (const def of registry.filter((s) => s.enabled)) {
     await queue.upsertJobScheduler(`refresh:${def.id}`, { every: def.refreshHours * 3_600_000 }, { name: `schedule:${def.id}`, data: { type: 'schedule', sourceId: def.id } });
   }
 }
+await queue.upsertJobScheduler('delay-stats', { every: 30 * 60_000 }, { name: 'delay-stats', data: { type: 'delay-stats' } });
 await queue.upsertJobScheduler('health', { every: 15 * 60_000 }, { name: 'health', data: { type: 'health' } });
 
 const worker = new Worker<Job>(
@@ -47,6 +48,7 @@ const worker = new Worker<Job>(
       }
       return { ok: true };
     }
+    if (job.data.type === 'delay-stats') return refreshDelayStats(sql);
     const def = defs.find((s) => s.id === job.data.sourceId);
     if (!def) throw new Error(`Unknown source ${job.data.sourceId}`);
     if (job.data.type === 'schedule') {

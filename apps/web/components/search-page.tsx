@@ -28,7 +28,6 @@ function stateFromParams(p: URLSearchParams): SearchState {
     maxTransfers: Number(p.get('maxTransfers') ?? 3),
     notBeforeDate: p.get('nbd') ?? '',
     notBeforeTime: p.get('nbt') ?? '12:00',
-    rail: p.get('rail') === '1',
     risk: (p.get('risk') as SearchState['risk']) ?? 'balanced',
     excludeRisky: p.get('noRisky') === '1',
     minTransfer: Number(p.get('minTransfer') ?? 10),
@@ -55,7 +54,6 @@ function paramsFromState(s: SearchState): string {
     p.set('nbd', s.notBeforeDate);
     p.set('nbt', s.notBeforeTime);
   }
-  if (s.rail) p.set('rail', '1');
   if (s.risk !== 'balanced') p.set('risk', s.risk);
   if (s.excludeRisky) p.set('noRisky', '1');
   if (s.minTransfer !== 10) p.set('minTransfer', String(s.minTransfer));
@@ -73,7 +71,7 @@ function toRequest(s: SearchState): JourneySearchRequest {
     ...(s.mode === 'arrive' && s.notBeforeDate ? { departureNotBefore: { date: s.notBeforeDate, time: s.notBeforeTime } } : {}),
     maxTransfers: s.maxTransfers,
     minTransferMinutes: s.minTransfer,
-    transportModes: s.rail ? ['bus', 'rail'] : ['bus'],
+    transportModes: ['bus'],
     riskPreference: s.risk,
     excludeRiskyTransfers: s.excludeRisky,
     alternatives: true,

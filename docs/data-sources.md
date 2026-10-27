@@ -17,7 +17,7 @@ Three different questions are kept apart:
 | `flixbus-eu-gtfs` | gtfs-url | **Yes** — imported 2,116 stops, 1,180 routes, 35,958 trips, 253,383 stop times in ~48 s; real multi-city routing demonstrated | import_run success; feed valid 2026-10-25 – 2027-04-25 |
 | `blablacar-bus-gtfs` | gtfs-url | **Yes** — 660 stops, 2,026 trips; 290 stops resolved onto existing FlixBus stations | import_run success |
 | `gtfs-de-fv` (rail) | gtfs-url | **Yes** — 5,323 trips (13 rail agencies incl. DB, SBB, ÖBB codeshares) | import_run success |
-| `flixbus-eu-gtfs-rt` | gtfs-rt-url | Adapter implemented; **not run** in this session | — |
+| `flixbus-eu-gtfs-rt` | gtfs-rt-url | Adapter implemented; **not run** (the feed host was unreachable from the development sandbox). Also feeds `delay_observation` for coach trips; the feed's stop-id/sequence conventions are unverified until the first real poll | — |
 | `sta-south-tyrol-gtfs`, `oebb-gtfs`, `swiss-gtfs` | gtfs-url | Adapter implemented; **not run** (150–290 MB feeds; ÖBB terms must be accepted by the deployer) | research HEAD checks only |
 | `swiss-netex`, `flixbus-netex-it-nap` | netex | **Not implemented** (NeTEx parsing is not in v1; the Italian NAP file has no stated licence) | — |
 | `regiojet`, `itabus`, `marinobus`, `autostradale` | unavailable | **No accessible data found.** The adapter returns "not integrated"; a clearly labelled *synthetic stand-in* can be enabled for development | research: no API/GTFS/NeTEx/licence found |

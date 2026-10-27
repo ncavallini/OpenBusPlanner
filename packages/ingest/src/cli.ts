@@ -3,11 +3,13 @@
  *   seed [--sources=a,b|default|all] [--force]   migrate + reference data + import enabled sources
  *   import <sourceId> [--force]                   import one schedule source
  *   realtime <sourceId>                           pull GTFS-RT once
+ *   delay-stats                                   recompute p50/p90 delay stats from collected samples
  *   health                                        health-check every registered source
  *   list                                          print the registry
  */
 import { createSql } from '@openbus/db';
 import { adapterFor } from './adapters/index';
+import { refreshDelayStats } from './delay-history';
 import { recordHealth, seed, syncRealtime, syncSchedule } from './jobs';
 import { loadRegistry } from './registry';
 
@@ -50,6 +52,10 @@ try {
       console.log(await syncRealtime(sql, find(args[0]), log));
       break;
     }
+    case 'delay-stats': {
+      console.log(await refreshDelayStats(sql));
+      break;
+    }
     case 'health': {
       for (const def of loadRegistry()) {
         const h = await adapterFor(def).healthCheck(def);
@@ -67,7 +73,7 @@ try {
       break;
     }
     default:
-      console.log('Usage: cli <seed|import|realtime|health|list> [...]');
+      console.log('Usage: cli <seed|import|realtime|delay-stats|health|list> [...]');
       process.exitCode = 1;
   }
 } finally {

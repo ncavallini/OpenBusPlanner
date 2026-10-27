@@ -1,6 +1,7 @@
 import type { Sql } from '@openbus/db';
 import { migrate, seedReferenceData } from '@openbus/db';
 import { adapterFor, type HealthResult } from './adapters/index';
+import { buildDelayObservations, loadDelayTrips, storeDelayObservations } from './delay-history';
 import { importGtfs, upsertSource, type ImportResult } from './import-gtfs';
 import { loadRegistry, type SourceDefinition } from './registry';
 
@@ -67,6 +68,14 @@ export async function syncRealtime(
         ON CONFLICT (trip_id, service_date) DO UPDATE SET canceled = EXCLUDED.canceled,
           stop_updates = EXCLUDED.stop_updates, observed_at = EXCLUDED.observed_at`;
       stored++;
+    }
+    // Delay history is best effort: a failure here must not mark the realtime source unhealthy.
+    try {
+      const trips = await loadDelayTrips(sql, scheduleId, updates);
+      const n = await storeDelayObservations(sql, scheduleId, buildDelayObservations(updates, trips, observedAt.getTime() / 1000));
+      log('delay samples stored', { source: def.id, samples: n });
+    } catch (e) {
+      log('delay history failed', { source: def.id, error: e instanceof Error ? e.message : String(e) });
     }
     await sql`DELETE FROM realtime_update WHERE source_id = ${def.id} AND observed_at < now() - interval '6 hours'`;
     await recordHealth(sql, def.id, { ok: true, latencyMs: Date.now() - started, message: `${updates.length} updates, ${stored} matched` });
